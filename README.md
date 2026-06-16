@@ -12,8 +12,7 @@ and record their lactate / pace / heart-rate curves.
 - **Next.js 16** (App Router, React 19) + **TypeScript**
 - **Tailwind CSS v4** — mobile-first design system (orange / green athletic theme)
 - **Drizzle ORM** on **Neon** Postgres (`@neondatabase/serverless` HTTP driver)
-- **Vercel** hosting
-- Shared **passcode** gate (signed cookie, enforced in `src/proxy.ts`)
+- **Vercel** hosting (public — no login)
 
 ## Features
 
@@ -39,11 +38,9 @@ pnpm dev                     # http://localhost:3000
 
 ### Environment variables
 
-| Variable       | Description                                              |
-| -------------- | ------------------------------------------------------- |
-| `DATABASE_URL` | Neon **pooled** connection string.                      |
-| `APP_PASSCODE` | Shared passcode that unlocks the hub.                   |
-| `AUTH_SECRET`  | Secret to sign the auth cookie (`openssl rand -hex 32`).|
+| Variable       | Description                        |
+| -------------- | --------------------------------- |
+| `DATABASE_URL` | Neon **pooled** connection string.|
 
 ## Database
 
@@ -62,9 +59,9 @@ pnpm db:studio     # browse data in Drizzle Studio
 
 ## Deployment (Vercel)
 
-Set `DATABASE_URL`, `APP_PASSCODE`, and `AUTH_SECRET` as environment variables
-in the Vercel project, then deploy. The build command is the default
-`next build`.
+Set `DATABASE_URL` as an environment variable in the Vercel project, then
+deploy. The build command is the default `next build`. The site is public
+(no login).
 
 ## Adding another app
 

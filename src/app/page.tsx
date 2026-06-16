@@ -2,7 +2,6 @@ import {
   ChevronRight,
   Droplet,
   Footprints,
-  LogOut,
   Users,
   Waves,
   type LucideIcon,
@@ -11,8 +10,6 @@ import Link from "next/link";
 
 import { BetriMark, Wordmark } from "@/components/Brand";
 import { countMembers, countTests } from "@/lib/db/queries";
-
-import { logout } from "./login/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -79,20 +76,9 @@ export default async function HubHome() {
 
   return (
     <main className="flex flex-1 flex-col px-5 pb-10">
-      <header className="flex items-center justify-between pb-6 pt-[max(1.25rem,env(safe-area-inset-top))]">
-        <div className="flex items-center gap-3">
-          <BetriMark />
-          <Wordmark />
-        </div>
-        <form action={logout}>
-          <button
-            type="submit"
-            aria-label="Log out"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
-          >
-            <LogOut size={20} />
-          </button>
-        </form>
+      <header className="flex items-center gap-3 pb-6 pt-[max(1.25rem,env(safe-area-inset-top))]">
+        <BetriMark />
+        <Wordmark />
       </header>
 
       <div className="mb-5">
