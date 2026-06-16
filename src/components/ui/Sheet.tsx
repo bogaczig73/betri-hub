@@ -26,11 +26,36 @@ export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+
+    // Lock background scroll. `overflow: hidden` alone is ignored by iOS
+    // Safari, so pin the body in place and restore the scroll position on
+    // close.
+    const body = document.body;
+    const scrollY = window.scrollY;
+    const prev = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow,
+    };
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.left = prev.left;
+      body.style.right = prev.right;
+      body.style.width = prev.width;
+      body.style.overflow = prev.overflow;
+      window.scrollTo(0, scrollY);
     };
   }, [open, onClose]);
 
@@ -48,14 +73,14 @@ export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
         aria-label="Close"
         tabIndex={open ? 0 : -1}
         onClick={onClose}
-        className="absolute inset-0 bg-black/50 backdrop-blur-[1px]"
+        className="absolute inset-0 touch-none bg-black/50 backdrop-blur-[1px]"
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "relative flex max-h-[92dvh] w-full max-w-md flex-col rounded-t-[1.75rem]",
+          "relative flex max-h-[92dvh] w-full max-w-md touch-pan-y flex-col overscroll-contain rounded-t-[1.75rem]",
           "border border-b-0 border-border bg-card text-card-foreground shadow-2xl",
           "transition-transform duration-300 ease-out",
           open ? "translate-y-0" : "translate-y-full",
@@ -79,7 +104,9 @@ export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
             <X size={20} />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-5 pb-2">{children}</div>
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-2">
+          {children}
+        </div>
         {footer ? (
           <div className="border-t border-border bg-card px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
             {footer}

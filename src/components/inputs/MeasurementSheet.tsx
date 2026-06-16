@@ -79,6 +79,11 @@ const fieldByKey = Object.fromEntries(FIELDS.map((f) => [f.key, f])) as Record<
   FieldConfig
 >;
 
+// Keep these in sync with the zod limits in src/app/lactate/actions.ts.
+const LACTATE_MAX = 40;
+const HR_MIN = 20;
+const HR_MAX = 260;
+
 function valuesToDigits(initial?: MeasurementValues | null) {
   return {
     lactate: initial?.lactate != null ? lactateToDigits(initial.lactate) : "",
@@ -112,6 +117,7 @@ export function MeasurementSheet({
   const [mode, setMode] = useState<"keypad" | "dial">("keypad");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Reset whenever the sheet is (re)opened for a different measurement.
   useEffect(() => {
@@ -119,6 +125,7 @@ export function MeasurementSheet({
       setDigits(valuesToDigits(initial));
       setActive("lactate");
       setMode("keypad");
+      setSaveError(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -127,8 +134,10 @@ export function MeasurementSheet({
   const activeDigits = digits[active];
   const dialValue = cfg.toValue(activeDigits) ?? cfg.dial.default;
 
-  const setActiveDigits = (next: string) =>
+  const setActiveDigits = (next: string) => {
+    setSaveError(null);
     setDigits((d) => ({ ...d, [active]: next }));
+  };
 
   const onDigit = (digit: string) => {
     if (activeDigits.length >= cfg.maxDigits) return;
@@ -143,14 +152,27 @@ export function MeasurementSheet({
     heartRate: digits.hr ? parseInt(digits.hr, 10) : null,
   };
 
-  const canSave = values.lactate != null && !saving;
+  // Live range check so the reason a save is blocked is always visible.
+  const rangeError: string | null =
+    values.lactate != null && values.lactate > LACTATE_MAX
+      ? `Lactate seems too high (max ${LACTATE_MAX} mmol/L). Type it without a separator — e.g. 124 = 1.24.`
+      : values.heartRate != null &&
+          (values.heartRate < HR_MIN || values.heartRate > HR_MAX)
+        ? `Heart rate should be between ${HR_MIN} and ${HR_MAX} bpm.`
+        : null;
+
+  const canSave = values.lactate != null && rangeError == null && !saving;
+  const shownError = rangeError ?? saveError;
 
   const handleSave = async () => {
-    if (!canSave) return;
+    if (values.lactate == null || rangeError != null || saving) return;
     setSaving(true);
+    setSaveError(null);
     try {
       await onSave(values);
       onClose();
+    } catch {
+      setSaveError("Couldn't save — please try again.");
     } finally {
       setSaving(false);
     }
@@ -273,6 +295,15 @@ export function MeasurementSheet({
             />
           </div>
         )}
+
+        {shownError ? (
+          <p
+            role="alert"
+            className="rounded-2xl bg-destructive/10 px-3 py-2 text-center text-sm font-medium text-destructive"
+          >
+            {shownError}
+          </p>
+        ) : null}
 
         {onDelete ? (
           <button
