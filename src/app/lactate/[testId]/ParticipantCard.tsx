@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, X } from "lucide-react";
+import { ChevronDown, LineChart, Plus, X } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import { LactateChart } from "@/components/LactateChart";
@@ -42,6 +42,7 @@ export function ParticipantCard({
 }) {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<MeasurementVM | null>(null);
+  const [showChart, setShowChart] = useState(false);
   const [removing, startRemove] = useTransition();
 
   const measurements = participant.measurements;
@@ -78,12 +79,6 @@ export function ParticipantCard({
         </button>
       </div>
 
-      {measurements.length >= 2 ? (
-        <div className="mt-3">
-          <LactateChart measurements={measurements} />
-        </div>
-      ) : null}
-
       {measurements.length > 0 ? (
         <ul className="mt-3 flex flex-col divide-y divide-border overflow-hidden rounded-2xl border border-border">
           {measurements.map((m, i) => (
@@ -110,6 +105,32 @@ export function ParticipantCard({
             </li>
           ))}
         </ul>
+      ) : null}
+
+      {measurements.length >= 2 ? (
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={() => setShowChart((s) => !s)}
+            aria-expanded={showChart}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
+          >
+            <LineChart size={16} />
+            {showChart ? "Hide curve" : "Show curve"}
+            <ChevronDown
+              size={16}
+              className={cn(
+                "transition-transform",
+                showChart && "rotate-180",
+              )}
+            />
+          </button>
+          {showChart ? (
+            <div className="mt-1">
+              <LactateChart measurements={measurements} />
+            </div>
+          ) : null}
+        </div>
       ) : null}
 
       <button

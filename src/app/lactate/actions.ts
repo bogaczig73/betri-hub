@@ -12,11 +12,14 @@ import {
   lactateParticipants,
   lactateTests,
 } from "@/lib/db";
+import { formatDate } from "@/lib/format";
 
 // ---------- Tests ----------
 
 const createTestSchema = z.object({
-  title: z.string().trim().min(1, "Give the test a name").max(120),
+  // Name is optional — defaults to the test date so "New test → Create" works
+  // with zero typing.
+  title: z.string().trim().max(120).optional(),
   testDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -32,7 +35,7 @@ export async function createTest(
   formData: FormData,
 ): Promise<CreateTestState> {
   const parsed = createTestSchema.safeParse({
-    title: formData.get("title"),
+    title: formData.get("title") || undefined,
     testDate: formData.get("testDate") || undefined,
     location: formData.get("location") || undefined,
     notes: formData.get("notes") || undefined,
@@ -43,11 +46,14 @@ export async function createTest(
   }
   const data = parsed.data;
 
+  const testDate = data.testDate ?? new Date().toISOString().slice(0, 10);
+  const title = data.title?.trim() || formatDate(testDate) || "New test";
+
   const [test] = await db
     .insert(lactateTests)
     .values({
-      title: data.title,
-      testDate: data.testDate ?? new Date().toISOString().slice(0, 10),
+      title,
+      testDate,
       location: data.location || null,
       notes: data.notes || null,
     })

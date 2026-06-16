@@ -33,14 +33,12 @@ export function NewTestForm() {
     <form action={formAction} className="flex flex-col gap-5">
       <div>
         <label htmlFor="title" className={labelClass}>
-          Test name
+          Test name <span className="font-normal">(optional)</span>
         </label>
         <input
           id="title"
           name="title"
-          required
-          autoFocus
-          placeholder="e.g. Spring threshold test"
+          placeholder="Defaults to the date"
           className={fieldClass}
         />
       </div>
