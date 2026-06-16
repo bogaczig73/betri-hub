@@ -82,7 +82,7 @@ export function AddParticipant({
         Add athlete
       </button>
 
-      <Sheet open={open} onClose={close} title="Add athlete">
+      <Sheet open={open} onClose={close} title="Add athlete" expandable>
         <div className="flex flex-col gap-3 pb-2">
           <div className="relative">
             <Search
@@ -145,7 +145,7 @@ export function AddParticipant({
 
             {!searching && results.length === 0 && !trimmed ? (
               <li className="px-1 py-6 text-center text-sm text-muted-foreground">
-                Start typing to find or add an athlete.
+                No saved athletes yet — type a name to add one.
               </li>
             ) : null}
           </ul>

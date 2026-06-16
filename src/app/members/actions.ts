@@ -37,7 +37,7 @@ export async function findOrCreateMember(name: string) {
 }
 
 export async function searchMembersAction(query: string, excludeIds: string[]) {
-  if (query.trim().length === 0 && excludeIds.length === 0) return [];
+  // Empty query returns the directory so athletes are visible before typing.
   return searchMembers(query, excludeIds);
 }
 

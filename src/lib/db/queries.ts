@@ -35,7 +35,7 @@ export async function searchMembers(query: string, excludeIds: string[] = []) {
     .from(members)
     .where(where)
     .orderBy(asc(members.name))
-    .limit(8);
+    .limit(50);
 }
 
 export async function listMembersWithCounts() {

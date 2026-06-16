@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/cn";
@@ -13,12 +13,33 @@ interface SheetProps {
   children: React.ReactNode;
   /** Optional element pinned to the bottom (e.g. a primary action). */
   footer?: React.ReactNode;
+  /** Allow dragging the grab handle to expand / collapse / close. */
+  expandable?: boolean;
 }
 
-export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
+export function Sheet({
+  open,
+  onClose,
+  title,
+  children,
+  footer,
+  expandable = false,
+}: SheetProps) {
   const [mounted, setMounted] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const startYRef = useRef(0);
 
   useEffect(() => setMounted(true), []);
+
+  // Collapse back to the default size each time the sheet opens.
+  useEffect(() => {
+    if (open) {
+      setExpanded(false);
+      setDragY(0);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -61,6 +82,47 @@ export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
 
   if (!mounted) return null;
 
+  const onHandleDown = (e: React.PointerEvent) => {
+    if (!expandable) return;
+    startYRef.current = e.clientY;
+    setDragging(true);
+    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+  };
+  const onHandleMove = (e: React.PointerEvent) => {
+    if (!dragging) return;
+    setDragY(e.clientY - startYRef.current);
+  };
+  const onHandleUp = () => {
+    if (!dragging) return;
+    setDragging(false);
+    const dy = dragY;
+    const T = 50;
+    if (dy < -T) {
+      setExpanded(true); // pulled up
+    } else if (dy > T) {
+      if (expanded)
+        setExpanded(false); // pulled down from expanded → collapse
+      else onClose(); // pulled down from default → close
+    } else if (Math.abs(dy) < 8) {
+      setExpanded((v) => !v); // tap the handle toggles expand
+    }
+    setDragY(0);
+  };
+
+  const heightClass = expandable
+    ? expanded
+      ? "h-[92dvh]"
+      : "max-h-[85dvh]"
+    : "max-h-[92dvh]";
+
+  const panelStyle: React.CSSProperties | undefined =
+    dragY > 0
+      ? {
+          transform: `translateY(${dragY}px)`,
+          transition: dragging ? "none" : undefined,
+        }
+      : undefined;
+
   return createPortal(
     <div
       aria-hidden={!open}
@@ -79,22 +141,34 @@ export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        style={panelStyle}
         className={cn(
-          "relative flex max-h-[92dvh] w-full max-w-md touch-pan-y flex-col overscroll-contain rounded-t-[1.75rem]",
+          "relative flex w-full max-w-md touch-pan-y flex-col overscroll-contain rounded-t-[1.75rem]",
           "border border-b-0 border-border bg-card text-card-foreground shadow-2xl",
           "transition-transform duration-300 ease-out",
+          heightClass,
           open ? "translate-y-0" : "translate-y-full",
         )}
       >
-        <div className="flex items-center justify-between px-5 pt-4">
-          <div className="mx-auto h-1.5 w-10 rounded-full bg-border" />
-        </div>
-        <div className="flex items-center justify-between gap-3 px-5 pb-3 pt-2">
-          {title ? (
-            <h2 className="text-xl font-semibold">{title}</h2>
-          ) : (
-            <span />
+        <div
+          onPointerDown={onHandleDown}
+          onPointerMove={onHandleMove}
+          onPointerUp={onHandleUp}
+          onPointerCancel={onHandleUp}
+          className={cn(
+            "flex shrink-0 items-center justify-center pb-1 pt-3",
+            expandable && "cursor-grab touch-none active:cursor-grabbing",
           )}
+        >
+          <div
+            className={cn(
+              "h-1.5 rounded-full bg-border transition-all",
+              expandable ? "w-12" : "w-10",
+            )}
+          />
+        </div>
+        <div className="flex items-center justify-between gap-3 px-5 pb-3 pt-1">
+          {title ? <h2 className="text-xl font-semibold">{title}</h2> : <span />}
           <button
             type="button"
             onClick={onClose}
