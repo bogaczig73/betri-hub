@@ -1,65 +1,161 @@
-import Image from "next/image";
+import {
+  ChevronRight,
+  Droplet,
+  Footprints,
+  LogOut,
+  Users,
+  Waves,
+  type LucideIcon,
+} from "lucide-react";
+import Link from "next/link";
 
-export default function Home() {
+import { BetriMark, Wordmark } from "@/components/Brand";
+import { countMembers, countTests } from "@/lib/db/queries";
+
+import { logout } from "./login/actions";
+
+export const dynamic = "force-dynamic";
+
+type App = {
+  key: string;
+  title: string;
+  description: string;
+  href?: string;
+  icon: LucideIcon;
+  tone: "primary" | "accent" | "blue" | "violet";
+  stat?: string;
+  soon?: boolean;
+};
+
+const toneClasses: Record<App["tone"], string> = {
+  primary: "bg-primary-soft text-primary",
+  accent: "bg-accent/10 text-accent",
+  blue: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+  violet: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+};
+
+export default async function HubHome() {
+  const [memberCount, testCount] = await Promise.all([
+    countMembers(),
+    countTests(),
+  ]);
+
+  const apps: App[] = [
+    {
+      key: "lactate",
+      title: "Lactate Testing",
+      description: "Run step tests, record lactate & pace curves",
+      href: "/lactate",
+      icon: Droplet,
+      tone: "primary",
+      stat: `${testCount} ${testCount === 1 ? "test" : "tests"}`,
+    },
+    {
+      key: "members",
+      title: "Members",
+      description: "Shared directory of athletes across all apps",
+      href: "/members",
+      icon: Users,
+      tone: "accent",
+      stat: `${memberCount} ${memberCount === 1 ? "person" : "people"}`,
+    },
+    {
+      key: "swim",
+      title: "Swim Sessions",
+      description: "Track pool sets, intervals and times",
+      icon: Waves,
+      tone: "blue",
+      soon: true,
+    },
+    {
+      key: "run",
+      title: "Run Workouts",
+      description: "Plan and log running sessions",
+      icon: Footprints,
+      tone: "violet",
+      soon: true,
+    },
+  ];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="flex flex-1 flex-col px-5 pb-10">
+      <header className="flex items-center justify-between pb-6 pt-[max(1.25rem,env(safe-area-inset-top))]">
+        <div className="flex items-center gap-3">
+          <BetriMark />
+          <Wordmark />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <form action={logout}>
+          <button
+            type="submit"
+            aria-label="Log out"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            <LogOut size={20} />
+          </button>
+        </form>
+      </header>
+
+      <div className="mb-5">
+        <h2 className="font-display text-3xl font-bold uppercase tracking-wide">
+          Apps
+        </h2>
+        <p className="text-muted-foreground">Pick what you want to work on.</p>
+      </div>
+
+      <ul className="flex flex-col gap-3">
+        {apps.map((app) => {
+          const Icon = app.icon;
+          const inner = (
+            <>
+              <span
+                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${toneClasses[app.tone]}`}
+              >
+                <Icon size={24} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="truncate text-lg font-semibold leading-tight">
+                    {app.title}
+                  </h3>
+                  {app.soon ? (
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Soon
+                    </span>
+                  ) : null}
+                </div>
+                <p className="truncate text-sm text-muted-foreground">
+                  {app.description}
+                </p>
+              </div>
+              {app.soon ? null : (
+                <div className="flex shrink-0 items-center gap-2 text-muted-foreground">
+                  {app.stat ? (
+                    <span className="text-sm font-medium">{app.stat}</span>
+                  ) : null}
+                  <ChevronRight size={20} />
+                </div>
+              )}
+            </>
+          );
+
+          return (
+            <li key={app.key}>
+              {app.href ? (
+                <Link
+                  href={app.href}
+                  className="flex items-center gap-4 rounded-3xl border border-border bg-card p-4 transition-colors hover:bg-muted active:bg-muted"
+                >
+                  {inner}
+                </Link>
+              ) : (
+                <div className="flex items-center gap-4 rounded-3xl border border-dashed border-border bg-card/60 p-4 opacity-70">
+                  {inner}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </main>
   );
 }
