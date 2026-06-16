@@ -22,16 +22,18 @@ export default async function MembersPage() {
 
         {members.length === 0 ? (
           <div className="mt-16 flex flex-col items-center text-center">
-            <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-accent/10 text-accent">
-              <Users size={30} />
+            <span className="flex h-16 w-16 items-center justify-center rounded-none bg-muted text-foreground">
+              <Users size={28} />
             </span>
-            <h3 className="mt-4 text-xl font-semibold">No members yet</h3>
-            <p className="mt-1 max-w-xs text-muted-foreground">
+            <h3 className="mt-5 font-display text-xl font-medium">
+              No members yet
+            </h3>
+            <p className="mt-2 max-w-xs text-[15px] leading-relaxed text-muted-foreground">
               Add athletes here, or add them on the fly while creating a test.
             </p>
           </div>
         ) : (
-          <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-3xl border border-border bg-card">
+          <ul className="flex flex-col divide-y divide-border overflow-hidden border border-border bg-card">
             {members.map((m) => (
               <li
                 key={m.id}
@@ -39,7 +41,7 @@ export default async function MembersPage() {
               >
                 <Avatar name={m.name} />
                 <span className="flex-1 font-medium">{m.name}</span>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                   {m.testCount} {m.testCount === 1 ? "test" : "tests"}
                 </span>
               </li>

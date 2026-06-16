@@ -30,9 +30,9 @@ export function AddMember() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary-soft py-3 font-semibold text-primary transition-colors hover:brightness-95"
+        className="flex w-full items-center justify-center gap-2 border border-foreground/30 py-3 text-xs font-bold uppercase tracking-[0.1em] text-foreground transition-colors hover:bg-muted"
       >
-        <UserPlus size={18} />
+        <UserPlus size={16} />
         Add member
       </button>
 
@@ -69,7 +69,7 @@ export function AddMember() {
             if (e.key === "Enter") submit();
           }}
           placeholder="Full name"
-          className="h-12 w-full rounded-2xl border border-input bg-card px-4 text-[15px] outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/30"
+          className="h-12 w-full rounded-sm border border-input bg-card px-4 text-[15px] outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/30"
         />
       </Sheet>
     </>

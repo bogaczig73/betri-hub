@@ -143,8 +143,8 @@ export function Sheet({
         aria-label={title}
         style={panelStyle}
         className={cn(
-          "relative flex w-full max-w-md touch-pan-y flex-col overscroll-contain rounded-t-[1.75rem]",
-          "border border-b-0 border-border bg-card text-card-foreground shadow-2xl",
+          "relative flex w-full max-w-md touch-pan-y flex-col overscroll-contain rounded-none",
+          "border-t-2 border-primary bg-card text-card-foreground",
           "transition-transform duration-300 ease-out",
           heightClass,
           open ? "translate-y-0" : "translate-y-full",
@@ -168,7 +168,11 @@ export function Sheet({
           />
         </div>
         <div className="flex items-center justify-between gap-3 px-5 pb-3 pt-1">
-          {title ? <h2 className="text-xl font-semibold">{title}</h2> : <span />}
+          {title ? (
+            <h2 className="font-display text-lg font-medium">{title}</h2>
+          ) : (
+            <span />
+          )}
           <button
             type="button"
             onClick={onClose}

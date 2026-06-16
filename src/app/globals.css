@@ -1,65 +1,48 @@
 @import "tailwindcss";
 
 /*
- * Betri Hub design tokens.
- * Athletic but calm: orange primary, green accent, warm-neutral surfaces.
- * Light by default, with a full dark theme via prefers-color-scheme.
+ * Betri Hub — Ferrari "cinematic editorial" design language.
+ *
+ * Near-black canvas (#181818, never pure black) holding pure-white display
+ * type. A single brand voltage — dark orange (#a64500) — used on primary
+ * CTAs, the brand mark and key data highlights. FerrariSans is
+ * licensed; Inter at weight 500 with negative tracking is the documented
+ * substitute. Sharp 0px corners are the brand shape; pills are reserved for
+ * badges and avatars. Depth comes from hairlines and brightness-steps —
+ * never drop-shadow tiers.
  */
 
 :root {
-  --background: #fafaf9; /* warm gray 50 */
-  --foreground: #1c1917; /* stone 900 */
+  /* Surface — brightness-step elevation on a warm near-black floor. */
+  --background: #181818; /* canvas — near-black, never pure black */
+  --foreground: #ffffff; /* ink */
 
-  --card: #ffffff;
-  --card-foreground: #1c1917;
+  --card: #1f1f1f; /* a hair above canvas; defined mostly by hairlines */
+  --card-foreground: #ffffff;
 
-  --muted: #f5f5f4; /* stone 100 */
-  --muted-foreground: #78716c; /* stone 500 */
+  --muted: #303030; /* canvas-elevated — chips, keypad keys, hover */
+  --muted-foreground: #969696; /* body grey */
 
-  --border: #e7e5e4; /* stone 200 */
-  --input: #e7e5e4;
+  --border: #303030; /* hairline */
+  --input: #303030;
 
-  --primary: #f97316; /* orange 500 */
+  /* Brand voltage — dark orange. */
+  --primary: #a64500;
   --primary-foreground: #ffffff;
-  --primary-soft: #fff1e7;
+  --primary-active: #843700; /* darker press state */
+  --primary-soft: #2a1708; /* dark orange wash for selected / emphasis surfaces */
 
-  --accent: #16a34a; /* green 600 */
+  /* Accent folds into the primary. */
+  --accent: #a64500;
   --accent-foreground: #ffffff;
 
-  --destructive: #dc2626; /* red 600 */
+  --destructive: #f13a2c; /* semantic warning */
   --destructive-foreground: #ffffff;
 
-  --ring: #f97316;
+  /* Documented global focus-ring colour. */
+  --ring: #f6e500;
 
-  --radius: 1rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0c0a09; /* stone 950 */
-    --foreground: #fafaf9;
-
-    --card: #1c1917; /* stone 900 */
-    --card-foreground: #fafaf9;
-
-    --muted: #292524; /* stone 800 */
-    --muted-foreground: #a8a29e; /* stone 400 */
-
-    --border: #292524;
-    --input: #44403c;
-
-    --primary: #fb923c; /* orange 400 */
-    --primary-foreground: #1c1917;
-    --primary-soft: #2a1a0e;
-
-    --accent: #22c55e; /* green 500 */
-    --accent-foreground: #052e16;
-
-    --destructive: #f87171;
-    --destructive-foreground: #1c1917;
-
-    --ring: #fb923c;
-  }
+  --radius: 0px; /* sharp by default */
 }
 
 @theme inline {
@@ -73,6 +56,7 @@
   --color-input: var(--input);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-active: var(--primary-active);
   --color-primary-soft: var(--primary-soft);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
@@ -80,12 +64,18 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-ring: var(--ring);
 
-  --font-sans: var(--font-barlow), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-barlow-condensed), var(--font-barlow), sans-serif;
+  /* Single sans family across every text role — FerrariSans → Inter. */
+  --font-sans: var(--font-inter), -apple-system, system-ui, sans-serif;
+  --font-display: var(--font-inter), -apple-system, system-ui, sans-serif;
 
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 0.25rem);
-  --radius-2xl: calc(var(--radius) + 0.5rem);
+  /* Sharp by default. Pills (rounded-full) survive for badges + avatars;
+     a 4px radius (rounded-sm) is the only soft step, reserved for inputs. */
+  --radius-sm: 4px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
 }
 
 * {
@@ -108,13 +98,22 @@ body {
   min-height: 100dvh;
 }
 
-/* Headings use the condensed display face. */
+/* Display type: FerrariSans-substitute Inter at weight 500 with negative
+   tracking. Editorial confidence — never bombastic, never bold. */
 h1,
 h2,
 h3,
 .font-display {
   font-family: var(--font-display);
-  letter-spacing: 0.01em;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+/* Uppercase eyebrows / labels / CTA voice — positive tracking. */
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
 }
 
 /* Hide number-input spinners; we drive these with custom keypads. */

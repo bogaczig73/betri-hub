@@ -246,16 +246,16 @@ export function MeasurementSheet({
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">{cfg.hint}</p>
           {/* Input-mode toggle: keypad or dial. */}
-          <div className="flex rounded-full bg-muted p-1">
+          <div className="flex border border-border">
             <button
               type="button"
               onClick={() => setMode("keypad")}
               aria-pressed={mode === "keypad"}
               className={cn(
-                "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+                "flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors",
                 mode === "keypad"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground",
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <Grid3x3 size={15} /> Keypad
@@ -265,10 +265,10 @@ export function MeasurementSheet({
               onClick={() => setMode("dial")}
               aria-pressed={mode === "dial"}
               className={cn(
-                "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+                "flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors",
                 mode === "dial"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground",
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <DialGlyph /> Dial
@@ -310,7 +310,7 @@ export function MeasurementSheet({
             type="button"
             onClick={handleDelete}
             disabled={deleting}
-            className="mx-auto flex items-center gap-2 py-1 text-sm font-medium text-destructive disabled:opacity-50"
+            className="mx-auto flex items-center gap-2 py-1 text-xs font-bold uppercase tracking-[0.1em] text-destructive disabled:opacity-50"
           >
             {deleting ? (
               <LoaderCircle className="animate-spin" size={16} />

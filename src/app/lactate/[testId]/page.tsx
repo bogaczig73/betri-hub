@@ -47,7 +47,7 @@ export default async function TestDetailPage({
 
       <main className="flex-1 px-5 py-4 pb-10">
         {test.notes ? (
-          <div className="mb-4 flex gap-2.5 rounded-2xl bg-muted/60 p-3 text-sm">
+          <div className="mb-4 flex gap-2.5 border-l-2 border-primary bg-muted/60 p-3 text-sm">
             <StickyNote
               size={16}
               className="mt-0.5 shrink-0 text-muted-foreground"
@@ -59,11 +59,9 @@ export default async function TestDetailPage({
         ) : null}
 
         <div className="mb-3 flex items-center gap-2">
-          <Users size={18} className="text-muted-foreground" />
-          <h2 className="font-display text-xl font-bold uppercase tracking-wide">
-            Athletes
-          </h2>
-          <span className="text-muted-foreground">
+          <Users size={16} className="text-muted-foreground" />
+          <h2 className="eyebrow text-[11px] text-foreground">Athletes</h2>
+          <span className="text-[11px] font-semibold text-muted-foreground">
             {participants.length}
           </span>
         </div>

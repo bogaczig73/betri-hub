@@ -9,8 +9,9 @@ import { Button } from "@/components/ui/Button";
 import { createTest, type CreateTestState } from "../actions";
 
 const fieldClass =
-  "h-12 w-full rounded-2xl border border-input bg-card px-4 text-[15px] outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/30";
-const labelClass = "mb-1.5 block text-sm font-medium text-muted-foreground";
+  "h-12 w-full rounded-sm border border-input bg-card px-4 text-[15px] outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/30";
+const labelClass =
+  "eyebrow mb-2 block text-[11px] text-muted-foreground";
 
 function SubmitButton() {
   const { pending } = useFormStatus();

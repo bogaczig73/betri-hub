@@ -1,19 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow, Barlow_Condensed } from "next/font/google";
+import { Inter } from "next/font/google";
 
 import "./globals.css";
 
-const barlow = Barlow({
+// FerrariSans is licensed; Inter is the documented open-source substitute.
+// A single family carries every text role — display at 500, body at 400.
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-barlow",
-  display: "swap",
-});
-
-const barlowCondensed = Barlow_Condensed({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-barlow-condensed",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -23,7 +18,7 @@ export const metadata: Metadata = {
   applicationName: "Betri Hub",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Betri Hub",
   },
 };
@@ -32,10 +27,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fafaf9" },
-    { media: "(prefers-color-scheme: dark)", color: "#0c0a09" },
-  ],
+  // Near-black canvas — never pure black.
+  themeColor: "#181818",
 };
 
 export default function RootLayout({
@@ -46,7 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body
-        className={`${barlow.variable} ${barlowCondensed.variable} flex min-h-full flex-col antialiased`}
+        className={`${inter.variable} flex min-h-full flex-col antialiased`}
       >
         {/* Phone-first shell: a centered column that never grows wider than a
             comfortable mobile width, even on desktop. */}

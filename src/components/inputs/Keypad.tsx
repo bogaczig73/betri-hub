@@ -9,8 +9,8 @@ interface KeypadProps {
 }
 
 const keyBase =
-  "flex h-16 items-center justify-center rounded-2xl bg-muted text-2xl font-semibold " +
-  "transition-colors hover:bg-border active:scale-[0.97] motion-reduce:active:scale-100 " +
+  "flex h-16 items-center justify-center rounded-none bg-muted text-2xl font-semibold " +
+  "transition-colors hover:bg-foreground/15 active:scale-[0.97] motion-reduce:active:scale-100 " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring select-none";
 
 export function Keypad({ onDigit, onDelete, onClear }: KeypadProps) {

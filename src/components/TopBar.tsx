@@ -19,7 +19,7 @@ export function TopBar({
           <Link
             href={backHref}
             aria-label="Back"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground hover:bg-muted"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none text-foreground transition-colors hover:bg-muted"
           >
             <ChevronLeft size={24} />
           </Link>
@@ -27,11 +27,13 @@ export function TopBar({
           <span className="w-1" />
         )}
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-xl font-semibold leading-tight">
+          <h1 className="truncate font-display text-xl font-medium leading-tight">
             {title}
           </h1>
           {subtitle ? (
-            <p className="truncate text-sm text-muted-foreground">{subtitle}</p>
+            <p className="truncate text-[13px] text-muted-foreground">
+              {subtitle}
+            </p>
           ) : null}
         </div>
         {right ? <div className="shrink-0">{right}</div> : null}

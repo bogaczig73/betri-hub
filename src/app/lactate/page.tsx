@@ -25,19 +25,19 @@ export default async function LactateListPage() {
               <li key={test.id}>
                 <Link
                   href={`/lactate/${test.id}`}
-                  className="block rounded-3xl border border-border bg-card p-4 transition-colors hover:bg-muted active:bg-muted"
+                  className="block border border-border bg-card p-4 transition-colors hover:bg-muted active:bg-muted"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-lg font-semibold leading-tight">
+                    <h3 className="font-display text-lg font-medium leading-tight">
                       {test.title}
                     </h3>
-                    <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                    <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                       <Users size={13} />
                       {test.participants.length}
                     </span>
                   </div>
 
-                  <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
                       <CalendarDays size={14} />
                       {formatDate(test.testDate)}
@@ -79,10 +79,10 @@ export default async function LactateListPage() {
           href="/lactate/new"
           className={buttonClasses({
             size: "lg",
-            className: "pointer-events-auto w-full shadow-lg",
+            className: "pointer-events-auto w-full",
           })}
         >
-          <Plus size={20} />
+          <Plus size={18} />
           New test
         </Link>
       </div>
@@ -93,11 +93,11 @@ export default async function LactateListPage() {
 function EmptyState() {
   return (
     <div className="mt-16 flex flex-col items-center text-center">
-      <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary-soft text-primary">
-        <Droplet size={30} />
+      <span className="flex h-16 w-16 items-center justify-center rounded-none bg-muted text-foreground">
+        <Droplet size={28} />
       </span>
-      <h3 className="mt-4 text-xl font-semibold">No tests yet</h3>
-      <p className="mt-1 max-w-xs text-muted-foreground">
+      <h3 className="mt-5 font-display text-xl font-medium">No tests yet</h3>
+      <p className="mt-2 max-w-xs text-[15px] leading-relaxed text-muted-foreground">
         Create your first lactate testing session and start adding athletes and
         measurements.
       </p>
