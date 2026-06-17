@@ -1,43 +1,39 @@
 "use client";
 
-import { LoaderCircle, Search, UserPlus } from "lucide-react";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { Search, UserPlus } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Sheet } from "@/components/ui/Sheet";
 import type { MemberSuggestion } from "@/lib/db/queries";
 
-import { searchMembersAction } from "@/app/members/actions";
-import { addParticipant, addParticipantByName } from "../actions";
-
 export function AddParticipant({
-  testId,
+  allMembers,
   excludeIds,
+  onAddExisting,
+  onCreateNew,
 }: {
-  testId: string;
+  allMembers: MemberSuggestion[];
   excludeIds: string[];
+  onAddExisting: (member: MemberSuggestion) => void;
+  onCreateNew: (name: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<MemberSuggestion[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [pendingId, setPendingId] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Debounced search whenever the query (or the open state) changes.
-  useEffect(() => {
-    if (!open) return;
-    setSearching(true);
-    const handle = setTimeout(async () => {
-      const res = await searchMembersAction(query, excludeIds);
-      setResults(res);
-      setSearching(false);
-    }, 180);
-    return () => clearTimeout(handle);
-  }, [query, open, excludeIds]);
-
   const trimmed = query.trim();
+
+  // Filter the preloaded directory on the client — no round-trip, so the
+  // picker opens and types instantly. Already-added athletes drop out.
+  const results = useMemo(() => {
+    const exclude = new Set(excludeIds);
+    const needle = trimmed.toLowerCase();
+    return allMembers.filter(
+      (m) => !exclude.has(m.id) && m.name.toLowerCase().includes(needle),
+    );
+  }, [allMembers, excludeIds, trimmed]);
+
   const hasExact = results.some(
     (r) => r.name.toLowerCase() === trimmed.toLowerCase(),
   );
@@ -45,30 +41,21 @@ export function AddParticipant({
   function close() {
     setOpen(false);
     setQuery("");
-    setResults([]);
   }
 
-  function addExisting(member: MemberSuggestion) {
-    setPendingId(member.id);
-    startTransition(() =>
-      addParticipant(testId, member.id).then(() => {
-        setPendingId(null);
-        setQuery("");
-        inputRef.current?.focus();
-      }),
-    );
+  // The athlete appears in the list instantly (optimistic), so we just clear
+  // the field and keep the sheet open to add the next one.
+  function selectExisting(member: MemberSuggestion) {
+    onAddExisting(member);
+    setQuery("");
+    inputRef.current?.focus();
   }
 
   function createAndAdd() {
     if (!trimmed) return;
-    setPendingId("new");
-    startTransition(() =>
-      addParticipantByName(testId, trimmed).then(() => {
-        setPendingId(null);
-        setQuery("");
-        inputRef.current?.focus();
-      }),
-    );
+    onCreateNew(trimmed);
+    setQuery("");
+    inputRef.current?.focus();
   }
 
   return (
@@ -106,15 +93,10 @@ export function AddParticipant({
                 <button
                   type="button"
                   onClick={createAndAdd}
-                  disabled={pendingId !== null}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-dashed border-primary/40 bg-primary-soft/60 px-3 py-2.5 text-left transition-colors hover:bg-primary-soft disabled:opacity-60"
+                  className="flex w-full items-center gap-3 rounded-2xl border border-dashed border-primary/40 bg-primary-soft/60 px-3 py-2.5 text-left transition-colors hover:bg-primary-soft"
                 >
                   <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                    {pendingId === "new" ? (
-                      <LoaderCircle className="animate-spin" size={18} />
-                    ) : (
-                      <UserPlus size={18} />
-                    )}
+                    <UserPlus size={18} />
                   </span>
                   <span className="font-medium">
                     Add new athlete “{trimmed}”
@@ -127,25 +109,20 @@ export function AddParticipant({
               <li key={m.id}>
                 <button
                   type="button"
-                  onClick={() => addExisting(m)}
-                  disabled={pendingId !== null}
-                  className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors hover:bg-muted disabled:opacity-60"
+                  onClick={() => selectExisting(m)}
+                  className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors hover:bg-muted"
                 >
                   <Avatar name={m.name} />
                   <span className="flex-1 font-medium">{m.name}</span>
-                  {pendingId === m.id ? (
-                    <LoaderCircle
-                      className="animate-spin text-muted-foreground"
-                      size={18}
-                    />
-                  ) : null}
                 </button>
               </li>
             ))}
 
-            {!searching && results.length === 0 && !trimmed ? (
+            {results.length === 0 && !trimmed ? (
               <li className="px-1 py-6 text-center text-sm text-muted-foreground">
-                No saved athletes yet — type a name to add one.
+                {allMembers.length === 0
+                  ? "No saved athletes yet — type a name to add one."
+                  : "Everyone’s already on this test."}
               </li>
             ) : null}
           </ul>

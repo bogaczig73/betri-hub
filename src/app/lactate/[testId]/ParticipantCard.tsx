@@ -29,6 +29,7 @@ export interface MeasurementVM {
 
 export interface ParticipantVM {
   id: string;
+  memberId: string;
   name: string;
   measurements: MeasurementVM[];
 }

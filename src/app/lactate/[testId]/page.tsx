@@ -1,13 +1,13 @@
-import { StickyNote, Users } from "lucide-react";
+import { StickyNote } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { TopBar } from "@/components/TopBar";
-import { getTestDetail } from "@/lib/db/queries";
+import { getTestDetail, listMembers } from "@/lib/db/queries";
 import { formatDate } from "@/lib/format";
 
-import { AddParticipant } from "./AddParticipant";
 import { DeleteTest } from "./DeleteTest";
-import { ParticipantCard, type ParticipantVM } from "./ParticipantCard";
+import { type ParticipantVM } from "./ParticipantCard";
+import { ParticipantsSection } from "./ParticipantsSection";
 
 export const dynamic = "force-dynamic";
 
@@ -17,11 +17,15 @@ export default async function TestDetailPage({
   params: Promise<{ testId: string }>;
 }) {
   const { testId } = await params;
-  const test = await getTestDetail(testId);
+  const [test, allMembers] = await Promise.all([
+    getTestDetail(testId),
+    listMembers(),
+  ]);
   if (!test) notFound();
 
   const participants: ParticipantVM[] = test.participants.map((p) => ({
     id: p.id,
+    memberId: p.memberId,
     name: p.member.name,
     measurements: [...p.measurements]
       .sort((a, b) => a.stage - b.stage)
@@ -58,34 +62,11 @@ export default async function TestDetailPage({
           </div>
         ) : null}
 
-        <div className="mb-3 flex items-center gap-2">
-          <Users size={16} className="text-muted-foreground" />
-          <h2 className="eyebrow text-[11px] text-foreground">Athletes</h2>
-          <span className="text-[11px] font-semibold text-muted-foreground">
-            {participants.length}
-          </span>
-        </div>
-
-        <div className="mb-4">
-          <AddParticipant
-            testId={test.id}
-            excludeIds={test.participants.map((p) => p.memberId)}
-          />
-        </div>
-
-        {participants.length === 0 ? (
-          <p className="mt-8 text-center text-muted-foreground">
-            No athletes yet. Add the first one above.
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {participants.map((p) => (
-              <li key={p.id}>
-                <ParticipantCard participant={p} testId={test.id} />
-              </li>
-            ))}
-          </ul>
-        )}
+        <ParticipantsSection
+          testId={test.id}
+          participants={participants}
+          allMembers={allMembers}
+        />
 
         <div className="mt-10 border-t border-border pt-4">
           <DeleteTest testId={test.id} />

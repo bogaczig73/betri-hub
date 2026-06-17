@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { db, members } from "@/lib/db";
-import { searchMembers } from "@/lib/db/queries";
 
 const nameSchema = z.string().trim().min(1).max(80);
 
@@ -34,11 +33,6 @@ export async function findOrCreateMember(name: string) {
     .where(sql`lower(${members.name}) = lower(${clean})`)
     .limit(1);
   return again;
-}
-
-export async function searchMembersAction(query: string, excludeIds: string[]) {
-  // Empty query returns the directory so athletes are visible before typing.
-  return searchMembers(query, excludeIds);
 }
 
 export async function createMember(name: string) {

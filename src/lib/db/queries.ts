@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, desc, eq, ilike, notInArray, sql } from "drizzle-orm";
+import { asc, desc, eq, sql } from "drizzle-orm";
 
 import { db } from "./index";
 import { lactateParticipants, lactateTests, members } from "./schema";
@@ -19,23 +19,12 @@ export async function countTests(): Promise<number> {
   return row?.count ?? 0;
 }
 
-export async function searchMembers(query: string, excludeIds: string[] = []) {
-  const q = query.trim();
-  const where = q
-    ? and(
-        ilike(members.name, `%${q}%`),
-        excludeIds.length ? notInArray(members.id, excludeIds) : undefined,
-      )
-    : excludeIds.length
-      ? notInArray(members.id, excludeIds)
-      : undefined;
-
+/** Lightweight id+name directory — small enough to filter on the client. */
+export async function listMembers() {
   return db
     .select({ id: members.id, name: members.name })
     .from(members)
-    .where(where)
-    .orderBy(asc(members.name))
-    .limit(50);
+    .orderBy(asc(members.name));
 }
 
 export async function listMembersWithCounts() {
@@ -87,5 +76,5 @@ export async function getTestDetail(testId: string) {
 export type TestDetail = NonNullable<Awaited<ReturnType<typeof getTestDetail>>>;
 export type TestListItem = Awaited<ReturnType<typeof listTests>>[number];
 export type MemberSuggestion = Awaited<
-  ReturnType<typeof searchMembers>
+  ReturnType<typeof listMembers>
 >[number];

@@ -78,14 +78,16 @@ export default async function HubHome() {
   ];
 
   return (
-    <main className="flex flex-1 flex-col pb-12">
+    <main className="flex flex-1 flex-col">
       {/* Cinematic hero band — a dark editorial gradient stands in for the
-          full-bleed photograph the brand language calls for. */}
+          full-bleed photograph the brand language calls for. It pins to the
+          top so the content sheet below scrolls up and over it, then rides
+          away with the page once the sheet has fully covered it. */}
       <header
-        className="relative flex flex-col overflow-hidden px-5 pb-9 pt-[max(2rem,env(safe-area-inset-top))]"
+        className="sticky top-0 z-0 flex flex-col overflow-hidden px-5 pb-9 pt-[max(2rem,env(safe-area-inset-top))]"
         style={{
           background:
-            "linear-gradient(180deg, var(--primary), var(--background) 72%)",
+            "linear-gradient(194deg, var(--primary), var(--background) 72%)",
         }}
       >
         <div className="flex items-center gap-3">
@@ -99,16 +101,20 @@ export default async function HubHome() {
         <h1 className="mt-2 font-display text-5xl font-medium leading-[1.02] tracking-[-0.03em]">
           Train.
           <br />
-          Test. Repeat.
+          Log. Repeat.
         </h1>
         <p className="mt-4 max-w-[19rem] text-[15px] leading-relaxed text-muted-foreground">
-          The group&apos;s workspace for lactate testing and the athletes behind
-          every session.
+          The Betri group&apos;s training companion. Built around the work, and
+          the people doing it.
         </p>
       </header>
 
-      <Section label="Applications" apps={applications} />
-      <Section label="Tools" apps={tools} />
+      {/* Opaque sheet — sits above the hero (higher z-index) and slides over
+          it as you scroll, so only the cards move until the hero is covered. */}
+      <div className="relative z-10 flex flex-col bg-background pb-12">
+        <Section label="Applications" apps={applications} />
+        <Section label="Tools" apps={tools} />
+      </div>
     </main>
   );
 }
