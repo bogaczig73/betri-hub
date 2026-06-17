@@ -1,7 +1,7 @@
 "use client";
 
 import { Search, UserPlus } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Sheet } from "@/components/ui/Sheet";
@@ -20,7 +20,6 @@ export function AddParticipant({
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const trimmed = query.trim();
 
@@ -44,18 +43,17 @@ export function AddParticipant({
   }
 
   // The athlete appears in the list instantly (optimistic), so we just clear
-  // the field and keep the sheet open to add the next one.
+  // the field and keep the sheet open to add the next one. We deliberately
+  // don't refocus the input — doing so re-pops the keyboard on mobile.
   function selectExisting(member: MemberSuggestion) {
     onAddExisting(member);
     setQuery("");
-    inputRef.current?.focus();
   }
 
   function createAndAdd() {
     if (!trimmed) return;
     onCreateNew(trimmed);
     setQuery("");
-    inputRef.current?.focus();
   }
 
   return (
@@ -77,7 +75,6 @@ export function AddParticipant({
               className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
             <input
-              ref={inputRef}
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
