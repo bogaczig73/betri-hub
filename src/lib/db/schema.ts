@@ -1,5 +1,6 @@
 import { relations, sql } from "drizzle-orm";
 import {
+  boolean,
   date,
   index,
   integer,
@@ -69,6 +70,12 @@ export const lactateParticipants = pgTable(
       .notNull()
       .references(() => members.id, { onDelete: "restrict" }),
     position: integer("position").notNull().default(0),
+    // Resting/warm-up lactate (mmol/L) and the pace at which it was taken.
+    // Used by the analysis engine for Bsln+ and the baseline-included fits.
+    baselineLactate: numeric("baseline_lactate", { precision: 5, scale: 2 }),
+    baselineTempoSeconds: integer("baseline_tempo_seconds"),
+    // Whether to feed the baseline point into Log-log / LTP / LTratio fits.
+    includeBaseline: boolean("include_baseline").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

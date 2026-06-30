@@ -1,4 +1,11 @@
-import { CalendarDays, Droplet, MapPin, Plus, Users } from "lucide-react";
+import {
+  CalendarDays,
+  Calculator,
+  Droplet,
+  MapPin,
+  Plus,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 
 import { TopBar } from "@/components/TopBar";
@@ -14,7 +21,19 @@ export default async function LactateListPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <TopBar title="Lactate Testing" backHref="/" />
+      <TopBar
+        title="Lactate Testing"
+        backHref="/"
+        right={
+          <Link
+            href="/lactate/analyze"
+            aria-label="Threshold calculator"
+            className="flex h-10 w-10 items-center justify-center rounded-none text-foreground transition-colors hover:bg-muted"
+          >
+            <Calculator size={22} />
+          </Link>
+        }
+      />
 
       <main className="flex-1 px-5 py-4 pb-28">
         {tests.length === 0 ? (

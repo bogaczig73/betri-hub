@@ -98,6 +98,30 @@ export async function removeParticipant(participantId: string, testId: string) {
   revalidatePath(`/lactate/${testId}`);
 }
 
+const baselineSchema = z.object({
+  baselineLactate: z.number().min(0).max(40).nullable(),
+  baselineTempoSeconds: z.number().int().min(0).max(36000).nullable(),
+  includeBaseline: z.boolean(),
+});
+
+export async function setParticipantBaseline(
+  participantId: string,
+  testId: string,
+  input: z.input<typeof baselineSchema>,
+) {
+  const data = baselineSchema.parse(input);
+  await db
+    .update(lactateParticipants)
+    .set({
+      baselineLactate:
+        data.baselineLactate != null ? data.baselineLactate.toFixed(2) : null,
+      baselineTempoSeconds: data.baselineTempoSeconds,
+      includeBaseline: data.includeBaseline,
+    })
+    .where(eq(lactateParticipants.id, participantId));
+  revalidatePath(`/lactate/${testId}`);
+}
+
 // ---------- Measurements ----------
 
 const measurementSchema = z.object({

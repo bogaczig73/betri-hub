@@ -27,6 +27,9 @@ export default async function TestDetailPage({
     id: p.id,
     memberId: p.memberId,
     name: p.member.name,
+    baselineLactate: p.baselineLactate != null ? Number(p.baselineLactate) : null,
+    baselineTempoSeconds: p.baselineTempoSeconds,
+    includeBaseline: p.includeBaseline,
     measurements: [...p.measurements]
       .sort((a, b) => a.stage - b.stage)
       .map((m) => ({

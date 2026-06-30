@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, LineChart, Plus, X } from "lucide-react";
+import { Activity, ChevronDown, LineChart, Plus, X } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import { LactateChart } from "@/components/LactateChart";
@@ -18,6 +18,7 @@ import {
   removeParticipant,
   updateMeasurement,
 } from "../actions";
+import { AnalysisSheet } from "./AnalysisSheet";
 
 export interface MeasurementVM {
   id: string;
@@ -32,6 +33,9 @@ export interface ParticipantVM {
   memberId: string;
   name: string;
   measurements: MeasurementVM[];
+  baselineLactate: number | null;
+  baselineTempoSeconds: number | null;
+  includeBaseline: boolean;
 }
 
 export function ParticipantCard({
@@ -44,9 +48,13 @@ export function ParticipantCard({
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<MeasurementVM | null>(null);
   const [showChart, setShowChart] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const [removing, startRemove] = useTransition();
 
   const measurements = participant.measurements;
+  const usable = measurements.filter(
+    (m) => m.lactate != null && m.tempoSeconds != null,
+  ).length;
 
   return (
     <div className="border border-border bg-card p-4">
@@ -134,10 +142,21 @@ export function ParticipantCard({
         </div>
       ) : null}
 
+      {usable >= 3 ? (
+        <button
+          type="button"
+          onClick={() => setAnalyzing(true)}
+          className="mt-3 flex w-full items-center justify-center gap-2 bg-primary py-3 text-xs font-bold uppercase tracking-[0.1em] text-primary-foreground transition-colors hover:bg-primary-active"
+        >
+          <Activity size={16} />
+          Analyze thresholds
+        </button>
+      ) : null}
+
       <button
         type="button"
         onClick={() => setAdding(true)}
-        className="mt-3 flex w-full items-center justify-center gap-2 border border-border py-3 text-xs font-bold uppercase tracking-[0.1em] text-foreground transition-colors hover:bg-muted"
+        className="mt-2 flex w-full items-center justify-center gap-2 border border-border py-3 text-xs font-bold uppercase tracking-[0.1em] text-foreground transition-colors hover:bg-muted"
       >
         <Plus size={16} />
         Add measurement
@@ -167,6 +186,24 @@ export function ParticipantCard({
             ? () => deleteMeasurement(editing.id, testId)
             : undefined
         }
+      />
+
+      <AnalysisSheet
+        open={analyzing}
+        onClose={() => setAnalyzing(false)}
+        participantId={participant.id}
+        participantName={participant.name}
+        testId={testId}
+        measurements={measurements.map((m) => ({
+          lactate: m.lactate,
+          tempoSeconds: m.tempoSeconds,
+          heartRate: m.heartRate,
+        }))}
+        initialBaseline={{
+          baselineLactate: participant.baselineLactate,
+          baselineTempoSeconds: participant.baselineTempoSeconds,
+          includeBaseline: participant.includeBaseline,
+        }}
       />
     </div>
   );

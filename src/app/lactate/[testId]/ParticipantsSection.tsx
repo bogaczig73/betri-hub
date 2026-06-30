@@ -38,6 +38,9 @@ export function ParticipantsSection({
         memberId: member.id,
         name: member.name,
         measurements: [],
+        baselineLactate: null,
+        baselineTempoSeconds: null,
+        includeBaseline: false,
       });
       await addParticipant(testId, member.id);
     });
@@ -50,6 +53,9 @@ export function ParticipantsSection({
         memberId: `pending:${name}`,
         name,
         measurements: [],
+        baselineLactate: null,
+        baselineTempoSeconds: null,
+        includeBaseline: false,
       });
       await addParticipantByName(testId, name);
     });
