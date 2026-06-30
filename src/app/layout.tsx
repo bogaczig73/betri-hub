@@ -39,6 +39,15 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Betri Hub",
   },
+  // iOS Safari auto-links anything resembling a phone number, date or address,
+  // mutating the DOM before React hydrates and breaking interactivity on the
+  // many number-heavy screens (paces, lactate, HR, dates). Disable it.
+  formatDetection: {
+    telephone: false,
+    date: false,
+    address: false,
+    email: false,
+  },
 };
 
 export const viewport: Viewport = {

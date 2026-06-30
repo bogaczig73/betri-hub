@@ -182,6 +182,36 @@ a:hover .link-hover-target,
   color: var(--link-hover);
 }
 
+/* Tap feedback. Drop the default grey iOS highlight box in favour of our own
+   response, and on touch devices give every button/link a quick press-scale so
+   a tap feels physical. Opt out with `.no-tap` (e.g. full-screen overlays). */
+button,
+a,
+[role="button"],
+label {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  button:not(:disabled):not(.no-tap):active,
+  a:not(.no-tap):active,
+  [role="button"]:not(.no-tap):active {
+    transform: scale(0.985);
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  button:not(.no-tap),
+  a:not(.no-tap),
+  [role="button"]:not(.no-tap) {
+    transition-property: transform, opacity, color, background-color,
+      border-color, box-shadow, filter;
+    transition-duration: 120ms;
+    transition-timing-function: ease;
+  }
+}
+
 /* Hide number-input spinners; we drive these with custom keypads. */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {

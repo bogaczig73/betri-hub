@@ -135,7 +135,7 @@ export function Sheet({
         aria-label="Close"
         tabIndex={open ? 0 : -1}
         onClick={onClose}
-        className="absolute inset-0 touch-none bg-black/50 backdrop-blur-[1px]"
+        className="no-tap absolute inset-0 touch-none bg-black/50 backdrop-blur-[1px]"
       />
       <div
         role="dialog"

@@ -57,7 +57,7 @@ function median(nums: number[]): number {
   return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
 }
 
-function summarise(results: RunResult[]): Consensus | null {
+export function summarise(results: RunResult[]): Consensus | null {
   const valid = results.filter(
     (r) => r.paceSeconds != null && Number.isFinite(r.speedKmh),
   );
