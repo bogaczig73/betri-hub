@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 
 import { BetriMark, Wordmark } from "@/components/Brand";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { countMembers, countTests } from "@/lib/db/queries";
 
 export const dynamic = "force-dynamic";
@@ -79,39 +80,33 @@ export default async function HubHome() {
 
   return (
     <main className="flex flex-1 flex-col">
-      {/* Cinematic hero band — a dark editorial gradient stands in for the
-          full-bleed photograph the brand language calls for. It pins to the
-          top so the content sheet below scrolls up and over it, then rides
-          away with the page once the sheet has fully covered it. */}
-      <header
-        className="sticky top-0 z-0 flex flex-col overflow-hidden px-5 pb-9 pt-[max(2rem,env(safe-area-inset-top))]"
-        style={{
-          background:
-            "linear-gradient(194deg, var(--primary), var(--background) 72%)",
-        }}
-      >
-        <div className="flex items-center gap-3">
-          <BetriMark size={40} inverted />
-          <Wordmark />
+      {/* Editorial masthead — the wordmark rides at Verge hero scale on a flat
+          canvas, hazard-orange "kicker" whisper above a massive display shout.
+          No gradient, no shadow: colour and hairlines carry the page. */}
+      <header className="flex flex-col px-5 pb-10 pt-[max(2rem,env(safe-area-inset-top))] md:px-8 md:pb-14">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <BetriMark size={40} inverted />
+            <Wordmark />
+          </div>
+          <ThemeToggle />
         </div>
 
-        <p className="eyebrow mt-12 text-[11px] text-foreground/80">
+        <p className="eyebrow mt-12 text-[11px] text-primary">
           Betri · Triathlon
         </p>
-        <h1 className="mt-2 font-display text-5xl font-medium leading-[1.02] tracking-[-0.03em]">
+        <h1 className="mt-3 font-display text-6xl leading-[0.92] md:text-8xl">
           Train.
           <br />
           Log. Repeat.
         </h1>
-        <p className="mt-4 max-w-[19rem] text-[15px] leading-relaxed text-muted-foreground">
+        <p className="mt-5 max-w-md text-[15px] leading-relaxed text-muted-foreground">
           The Betri group&apos;s training companion. Built around the work, and
           the people doing it.
         </p>
       </header>
 
-      {/* Opaque sheet — sits above the hero (higher z-index) and slides over
-          it as you scroll, so only the cards move until the hero is covered. */}
-      <div className="relative z-10 flex flex-col bg-background pb-12">
+      <div className="flex flex-col bg-background pb-16">
         <Section label="Applications" apps={applications} />
         <Section label="Tools" apps={tools} />
       </div>
@@ -122,17 +117,18 @@ export default async function HubHome() {
 function Section({ label, apps }: { label: string; apps: App[] }) {
   return (
     <section>
-      <div className="flex items-center gap-3 px-5 pb-4 pt-8">
+      <div className="flex items-center gap-3 px-5 pb-4 pt-8 md:px-8">
         <span className="eyebrow text-[11px] text-muted-foreground">
           {label}
         </span>
         <span className="h-px flex-1 bg-border" />
       </div>
 
-      <ul className="flex flex-col gap-3 px-5">
+      {/* Mobile: a StoryStream column. Desktop: a multi-column tile grid. */}
+      <ul className="grid grid-cols-1 gap-3 px-5 md:grid-cols-2 md:px-8 lg:grid-cols-3">
         {apps.map((app) => (
           <li key={app.key}>
-            <AppRow app={app} />
+            <AppTile app={app} />
           </li>
         ))}
       </ul>
@@ -140,39 +136,41 @@ function Section({ label, apps }: { label: string; apps: App[] }) {
   );
 }
 
-function AppRow({ app }: { app: App }) {
+function AppTile({ app }: { app: App }) {
   const Icon = app.icon;
   const inner = (
     <>
-      <span
-        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-none"
-        style={{ backgroundColor: app.color, color: app.iconColor }}
-      >
-        <Icon size={22} />
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <h3 className="truncate text-[17px] font-medium leading-tight">
-            {app.title}
-          </h3>
-          {app.soon ? (
-            <span className="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-              Soon
-            </span>
-          ) : null}
-        </div>
-        <p className="truncate text-[13px] text-muted-foreground">
+      <div className="flex items-start justify-between">
+        <span
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px]"
+          style={{ backgroundColor: app.color, color: app.iconColor }}
+        >
+          <Icon size={22} />
+        </span>
+        {app.soon ? (
+          <span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            Soon
+          </span>
+        ) : app.stat ? (
+          <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            {app.stat}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mt-5 min-w-0 flex-1">
+        <h3 className="text-[20px] font-bold leading-tight transition-colors group-hover:text-link-hover">
+          {app.title}
+        </h3>
+        <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
           {app.description}
         </p>
       </div>
+
       {app.soon ? null : (
-        <div className="flex shrink-0 items-center gap-3 text-muted-foreground">
-          {app.stat ? (
-            <span className="text-[11px] font-semibold uppercase tracking-[0.08em]">
-              {app.stat}
-            </span>
-          ) : null}
-          <ChevronRight size={18} />
+        <div className="mt-4 flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">
+          Open
+          <ChevronRight size={14} />
         </div>
       )}
     </>
@@ -182,7 +180,7 @@ function AppRow({ app }: { app: App }) {
     return (
       <Link
         href={app.href}
-        className="flex items-center gap-4 border border-border bg-card p-4 transition-colors hover:bg-muted active:bg-muted"
+        className="group flex h-full flex-col rounded-[20px] border border-border bg-card p-5 transition-colors hover:border-primary"
       >
         {inner}
       </Link>
@@ -190,7 +188,7 @@ function AppRow({ app }: { app: App }) {
   }
 
   return (
-    <div className="flex items-center gap-4 border border-dashed border-border bg-card/40 p-4 opacity-60">
+    <div className="flex h-full flex-col rounded-[20px] border border-dashed border-border bg-card/40 p-5 opacity-60">
       {inner}
     </div>
   );

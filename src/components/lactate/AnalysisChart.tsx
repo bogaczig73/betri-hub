@@ -60,7 +60,7 @@ export function AnalysisChart({
   });
 
   return (
-    <div className="rounded-none border border-border bg-muted/40 p-2">
+    <div className="rounded-lg border border-border bg-muted/40 p-2">
       <svg
         viewBox={`0 0 ${w} ${h}`}
         className="h-auto w-full"

@@ -1,48 +1,82 @@
 @import "tailwindcss";
 
 /*
- * Betri Hub — Ferrari "cinematic editorial" design language.
+ * Betri Hub — "The Verge" editorial design language.
  *
- * Near-black canvas (#181818, never pure black) holding pure-white display
- * type. A single brand voltage — dark orange (#a64500) — used on primary
- * CTAs, the brand mark and key data highlights. FerrariSans is
- * licensed; Inter at weight 500 with negative tracking is the documented
- * substitute. Sharp 0px corners are the brand shape; pills are reserved for
- * badges and avatars. Depth comes from hairlines and brightness-steps —
- * never drop-shadow tiers.
+ * Massive display headlines (Anton ≈ Manuka), pill-radius color-block cards,
+ * mono-uppercase labels (Space Mono ≈ PolySans Mono), hairline borders doing
+ * the work shadows would, and a StoryStream-style feed. The Verge ships dark
+ * only; here we keep a LIGHT default with a DARK Verge-canvas toggle. The
+ * single brand hazard accent is Betri orange (not the Verge mint/violet); the
+ * per-app tile colours remain the saturated color blocks.
+ *
+ * Depth is color + 1px hairlines, never drop-shadow tiers.
  */
 
+/* LIGHT — the default theme. A warm off-white editorial canvas. */
 :root {
-  /* Surface — brightness-step elevation on a warm near-black floor. */
-  --background: #181818; /* canvas — near-black, never pure black */
-  --foreground: #ffffff; /* ink */
+  --background: #f6f6f4; /* canvas — warm off-white, never pure white */
+  --foreground: #131313; /* ink — the Verge near-black */
 
-  --card: #1f1f1f; /* a hair above canvas; defined mostly by hairlines */
-  --card-foreground: #ffffff;
+  --card: #ffffff; /* spotlight surface */
+  --card-foreground: #131313;
 
-  --muted: #303030; /* canvas-elevated — chips, keypad keys, hover */
-  --muted-foreground: #969696; /* body grey */
+  --muted: #ececea; /* chips, keypad keys, hover */
+  --muted-foreground: #6a6a6a; /* bylines / timestamps / metadata grey */
 
-  --border: #303030; /* hairline */
-  --input: #303030;
+  --border: #dcdcd8; /* hairline */
+  --input: #dcdcd8;
 
-  /* Brand voltage — dark orange. */
-  --primary: #a64500;
+  /* Brand voltage — Betri orange, brightened to read as a Verge "hazard". */
+  --primary: #c45200;
   --primary-foreground: #ffffff;
-  --primary-active: #843700; /* darker press state */
-  --primary-soft: #2a1708; /* dark orange wash for selected / emphasis surfaces */
+  --primary-active: #9c4100; /* darker press state */
+  --primary-soft: #fbe9dd; /* orange wash for selected / emphasis surfaces */
 
-  /* Accent folds into the primary. */
-  --accent: #a64500;
+  /* Accent folds into the primary hazard. */
+  --accent: #c45200;
   --accent-foreground: #ffffff;
 
-  --destructive: #f13a2c; /* semantic warning */
+  --destructive: #d52a1c; /* semantic warning */
   --destructive-foreground: #ffffff;
 
-  /* Documented global focus-ring colour. */
-  --ring: #f6e500;
+  /* The Verge link-hover blue — the one moment blue appears. */
+  --link-hover: #3860be;
 
-  --radius: 0px; /* sharp by default */
+  /* Verge keyboard-focus cyan. */
+  --ring: #1eaedb;
+
+  /* Verge pill radii. Sharp (0px) is gone. */
+  --radius: 20px;
+}
+
+/* DARK — the Verge canvas. Almost-but-not-quite pure black. */
+[data-theme="dark"] {
+  --background: #131313;
+  --foreground: #ffffff;
+
+  --card: #1b1b1b;
+  --card-foreground: #ffffff;
+
+  --muted: #2d2d2d;
+  --muted-foreground: #949494;
+
+  --border: #303030;
+  --input: #303030;
+
+  --primary: #d35a04;
+  --primary-foreground: #ffffff;
+  --primary-active: #a84700;
+  --primary-soft: #2a1708;
+
+  --accent: #d35a04;
+  --accent-foreground: #ffffff;
+
+  --destructive: #f13a2c;
+  --destructive-foreground: #ffffff;
+
+  --link-hover: #6f9bff;
+  --ring: #1eaedb;
 }
 
 @theme inline {
@@ -62,20 +96,22 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-link-hover: var(--link-hover);
   --color-ring: var(--ring);
 
-  /* Single sans family across every text role — FerrariSans → Inter. */
-  --font-sans: var(--font-inter), -apple-system, system-ui, sans-serif;
-  --font-display: var(--font-inter), -apple-system, system-ui, sans-serif;
+  /* Three families: Anton (display ≈ Manuka), Space Grotesk (UI ≈ PolySans),
+     Space Mono (labels ≈ PolySans Mono). */
+  --font-sans: var(--font-grotesk), -apple-system, system-ui, sans-serif;
+  --font-display: var(--font-anton), Impact, var(--font-grotesk), sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, "Courier New", monospace;
 
-  /* Sharp by default. Pills (rounded-full) survive for badges + avatars;
-     a 4px radius (rounded-sm) is the only soft step, reserved for inputs. */
-  --radius-sm: 4px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
-  --radius-2xl: 0px;
-  --radius-3xl: 0px;
+  /* Verge "nested scale" radii: 2px typewriter tags → 40px outlined pills. */
+  --radius-sm: 2px; /* inputs, small badges */
+  --radius-md: 4px; /* nested images, small buttons */
+  --radius-lg: 20px; /* standard pill cards + color tiles */
+  --radius-xl: 24px; /* feature tiles + primary buttons */
+  --radius-2xl: 30px; /* large promo buttons */
+  --radius-3xl: 40px; /* outlined CTA pills */
 }
 
 * {
@@ -85,6 +121,11 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Hint native form controls / scrollbars to the active theme. */
+  color-scheme: light;
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 body {
@@ -98,22 +139,47 @@ body {
   min-height: 100dvh;
 }
 
-/* Display type: FerrariSans-substitute Inter at weight 500 with negative
-   tracking. Editorial confidence — never bombastic, never bold. */
+/* Headlines default to the PolySans workhorse (Space Grotesk) at bold — the
+   Verge module/tile headline voice. */
 h1,
 h2,
-h3,
-.font-display {
-  font-family: var(--font-display);
-  font-weight: 500;
-  letter-spacing: -0.02em;
+h3 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
-/* Uppercase eyebrows / labels / CTA voice — positive tracking. */
-.eyebrow {
+/* Display shout: Anton (≈ Manuka). Opt-in via .font-display, reserved for hero
+   wordmarks, page titles and big editorial headlines — never small UI. Per the
+   Verge substitute note, open-metric condensed displays need their line-height
+   loosened (~0.80 → ~0.95) to avoid ascender/descender collisions. */
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-weight: 600;
+}
+
+/* Mono-uppercase eyebrows / kickers / timestamps / button labels — the second
+   most identifiable Verge detail after the display shout. */
+.eyebrow {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+}
+
+/* "Fashion-whisper" thin capitalized eyebrow — the whisper-vs-shout signature. */
+.whisper {
+  font-family: var(--font-sans);
+  font-weight: 300;
+  letter-spacing: 0.14em;
+}
+
+/* Links hover to deep link-blue across the system — colour only, no underline. */
+a:hover .link-hover-target,
+.link-hover:hover {
+  color: var(--link-hover);
 }
 
 /* Hide number-input spinners; we drive these with custom keypads. */

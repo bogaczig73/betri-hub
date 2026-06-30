@@ -17,7 +17,7 @@ export function DeleteTest({ testId }: { testId: string }) {
           startTransition(() => deleteTest(testId).then(() => {}));
         }
       }}
-      className="flex w-full items-center justify-center gap-2 py-3 text-xs font-bold uppercase tracking-[0.1em] text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+      className="flex w-full items-center justify-center gap-2 rounded-[24px] py-3 font-mono text-xs font-bold uppercase tracking-[0.15em] text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
     >
       {pending ? (
         <LoaderCircle className="animate-spin" size={16} />

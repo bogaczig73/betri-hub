@@ -14,8 +14,10 @@ export default function AnalyzePage() {
         subtitle="Enter stages → LT1 / LT2"
         backHref="/lactate"
       />
-      <main className="flex-1 px-5 py-4 pb-10">
-        <ManualAnalyzer />
+      <main className="flex-1 px-5 py-4 pb-10 md:px-8">
+        <div className="mx-auto w-full max-w-2xl">
+          <ManualAnalyzer />
+        </div>
       </main>
     </div>
   );

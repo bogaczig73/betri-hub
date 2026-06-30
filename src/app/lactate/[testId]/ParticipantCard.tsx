@@ -57,11 +57,11 @@ export function ParticipantCard({
   ).length;
 
   return (
-    <div className="border border-border bg-card p-4">
+    <div className="rounded-[20px] border border-border bg-card p-4">
       <div className="flex items-center gap-3">
         <Avatar name={participant.name} />
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-display text-lg font-medium leading-tight">
+          <h3 className="truncate text-lg font-bold leading-tight">
             {participant.name}
           </h3>
           <p className="text-sm text-muted-foreground">
@@ -89,7 +89,7 @@ export function ParticipantCard({
       </div>
 
       {measurements.length > 0 ? (
-        <ul className="mt-3 flex flex-col divide-y divide-border overflow-hidden border border-border">
+        <ul className="mt-3 flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border">
           {measurements.map((m, i) => (
             <li key={m.id}>
               <button
@@ -146,7 +146,7 @@ export function ParticipantCard({
         <button
           type="button"
           onClick={() => setAnalyzing(true)}
-          className="mt-3 flex w-full items-center justify-center gap-2 bg-primary py-3 text-xs font-bold uppercase tracking-[0.1em] text-primary-foreground transition-colors hover:bg-primary-active"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-[24px] bg-primary py-3 font-mono text-xs font-bold uppercase tracking-[0.15em] text-primary-foreground transition-colors hover:bg-primary-active"
         >
           <Activity size={16} />
           Analyze thresholds
@@ -156,7 +156,7 @@ export function ParticipantCard({
       <button
         type="button"
         onClick={() => setAdding(true)}
-        className="mt-2 flex w-full items-center justify-center gap-2 border border-border py-3 text-xs font-bold uppercase tracking-[0.1em] text-foreground transition-colors hover:bg-muted"
+        className="mt-2 flex w-full items-center justify-center gap-2 rounded-[24px] border border-border py-3 font-mono text-xs font-bold uppercase tracking-[0.15em] text-foreground transition-colors hover:bg-muted"
       >
         <Plus size={16} />
         Add measurement
@@ -225,7 +225,7 @@ function Stat({
       </span>
       <span
         className={cn(
-          "font-display font-bold leading-tight",
+          "font-mono font-bold leading-tight tabular-nums",
           emphasis ? "text-xl text-primary" : "text-lg",
         )}
       >

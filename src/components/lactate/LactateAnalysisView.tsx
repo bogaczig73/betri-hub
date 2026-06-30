@@ -16,7 +16,7 @@ import type { Consensus } from "@/lib/lactate/display";
 import { AnalysisChart, type ChartMarker } from "./AnalysisChart";
 
 const LT1_COLOR = "#4c98b9"; // info blue — aerobic
-const LT2_COLOR = "#a64500"; // brand orange — anaerobic
+const LT2_COLOR = "#c45200"; // brand orange — anaerobic
 
 export function LactateAnalysisView({
   measurements,
@@ -81,7 +81,7 @@ export function LactateAnalysisView({
         <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           Curve fit
         </span>
-        <div className="flex border border-border">
+        <div className="flex overflow-hidden rounded-full border border-border">
           {(
             [
               ["3rd degree polynomial", "3rd"],
@@ -133,15 +133,15 @@ function SummaryCard({
 }) {
   return (
     <div
-      className="border border-border bg-card p-3"
+      className="rounded-lg border border-border bg-card p-3"
       style={{ borderTopWidth: 2, borderTopColor: color }}
     >
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <span className="eyebrow text-[10px] text-muted-foreground">
         {title}
       </span>
       {c ? (
         <>
-          <div className="mt-1 font-display text-3xl font-bold leading-none">
+          <div className="mt-1 font-mono text-3xl font-bold leading-none tabular-nums">
             {formatTempo(c.paceSeconds)}
             <span className="ml-1 text-sm font-medium text-muted-foreground">
               /km
@@ -177,7 +177,7 @@ function MethodGroup({
           {title}
         </span>
       </div>
-      <div className="overflow-hidden border border-border">
+      <div className="overflow-hidden rounded-lg border border-border">
         <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 bg-muted/60 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
           <span>Method</span>
           <span className="text-right">Pace</span>
@@ -199,7 +199,7 @@ function MethodGroup({
                 ) : null}
                 <span className="truncate">{r.method}</span>
               </span>
-              <span className="text-right font-display font-bold tabular-nums">
+              <span className="text-right font-mono font-bold tabular-nums">
                 {r.paceSeconds != null ? formatTempo(r.paceSeconds) : "—"}
               </span>
               <span className="text-right tabular-nums text-muted-foreground">

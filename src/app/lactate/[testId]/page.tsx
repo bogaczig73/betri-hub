@@ -52,9 +52,9 @@ export default async function TestDetailPage({
         backHref="/lactate"
       />
 
-      <main className="flex-1 px-5 py-4 pb-10">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-4 pb-10 md:px-8">
         {test.notes ? (
-          <div className="mb-4 flex gap-2.5 border-l-2 border-primary bg-muted/60 p-3 text-sm">
+          <div className="mb-4 flex gap-2.5 rounded-r-lg border-l-2 border-primary bg-muted/60 p-3 text-sm">
             <StickyNote
               size={16}
               className="mt-0.5 shrink-0 text-muted-foreground"

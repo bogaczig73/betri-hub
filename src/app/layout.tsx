@@ -1,14 +1,32 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Anton, Space_Grotesk, Space_Mono } from "next/font/google";
+
+import { ThemeScript } from "@/components/theme/ThemeScript";
 
 import "./globals.css";
 
-// FerrariSans is licensed; Inter is the documented open-source substitute.
-// A single family carries every text role — display at 500, body at 400.
-const inter = Inter({
+// The Verge type stack, via documented open-source substitutes:
+//   Manuka      → Anton         (display shout, ≥ large headline sizes only)
+//   PolySans    → Space Grotesk (UI / body workhorse)
+//   PolySans Mono → Space Mono  (UPPERCASE labels, timestamps, button text)
+const anton = Anton({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-inter",
+  weight: "400",
+  variable: "--font-anton",
+  display: "swap",
+});
+
+const grotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "700"],
+  variable: "--font-grotesk",
+  display: "swap",
+});
+
+const spaceMono = Space_Mono({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-space-mono",
   display: "swap",
 });
 
@@ -27,8 +45,11 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  // Near-black canvas — never pure black.
-  themeColor: "#181818",
+  // Match the canvas of each theme.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f6f6f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#131313" },
+  ],
 };
 
 export default function RootLayout({
@@ -37,13 +58,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full" suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
       <body
-        className={`${inter.variable} flex min-h-full flex-col antialiased`}
+        className={`${anton.variable} ${grotesk.variable} ${spaceMono.variable} flex min-h-full flex-col antialiased`}
       >
-        {/* Phone-first shell: a centered column that never grows wider than a
-            comfortable mobile width, even on desktop. */}
-        <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-1 flex-col bg-background">
+        {/* Mobile-first shell that fans out on larger screens: a phone column
+            on mobile, widening to a comfortable desktop container (~1280px). */}
+        <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-1 flex-col bg-background md:max-w-3xl lg:max-w-6xl">
           {children}
         </div>
       </body>

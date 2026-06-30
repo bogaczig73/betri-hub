@@ -19,7 +19,7 @@ export function BetriMark({
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-center rounded-none",
+        "inline-flex items-center justify-center rounded-[20%]",
         inverted ? "bg-white text-primary" : "bg-primary text-primary-foreground",
         className,
       )}
@@ -44,7 +44,7 @@ export function Wordmark({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "font-display text-xl font-semibold uppercase tracking-[0.18em]",
+        "font-display text-2xl uppercase tracking-[0.04em]",
         className,
       )}
     >

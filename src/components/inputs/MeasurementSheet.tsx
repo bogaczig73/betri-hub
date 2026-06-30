@@ -229,7 +229,7 @@ export function MeasurementSheet({
                 </span>
                 <span
                   className={cn(
-                    "font-display text-2xl font-bold leading-tight",
+                    "font-mono text-2xl font-bold leading-tight tabular-nums",
                     v == null && "text-muted-foreground",
                   )}
                 >
@@ -246,7 +246,7 @@ export function MeasurementSheet({
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">{cfg.hint}</p>
           {/* Input-mode toggle: keypad or dial. */}
-          <div className="flex border border-border">
+          <div className="flex overflow-hidden rounded-full border border-border">
             <button
               type="button"
               onClick={() => setMode("keypad")}

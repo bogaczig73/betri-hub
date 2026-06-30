@@ -28,29 +28,29 @@ export default async function LactateListPage() {
           <Link
             href="/lactate/analyze"
             aria-label="Threshold calculator"
-            className="flex h-10 w-10 items-center justify-center rounded-none text-foreground transition-colors hover:bg-muted"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground transition-colors hover:bg-muted"
           >
             <Calculator size={22} />
           </Link>
         }
       />
 
-      <main className="flex-1 px-5 py-4 pb-28">
+      <main className="flex-1 px-5 py-4 pb-28 md:px-8">
         {tests.length === 0 ? (
           <EmptyState />
         ) : (
-          <ul className="flex flex-col gap-3">
+          <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
             {tests.map((test) => (
               <li key={test.id}>
                 <Link
                   href={`/lactate/${test.id}`}
-                  className="block border border-border bg-card p-4 transition-colors hover:bg-muted active:bg-muted"
+                  className="group block h-full rounded-[20px] border border-border bg-card p-5 transition-colors hover:border-primary"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <h3 className="font-display text-lg font-medium leading-tight">
+                    <h3 className="text-lg font-bold leading-tight transition-colors group-hover:text-link-hover">
                       {test.title}
                     </h3>
-                    <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                       <Users size={13} />
                       {test.participants.length}
                     </span>
@@ -98,7 +98,7 @@ export default async function LactateListPage() {
           href="/lactate/new"
           className={buttonClasses({
             size: "lg",
-            className: "pointer-events-auto w-full",
+            className: "pointer-events-auto w-full sm:w-auto sm:min-w-[18rem]",
           })}
         >
           <Plus size={18} />
@@ -112,10 +112,10 @@ export default async function LactateListPage() {
 function EmptyState() {
   return (
     <div className="mt-16 flex flex-col items-center text-center">
-      <span className="flex h-16 w-16 items-center justify-center rounded-none bg-muted text-foreground">
+      <span className="flex h-16 w-16 items-center justify-center rounded-[20px] bg-muted text-foreground">
         <Droplet size={28} />
       </span>
-      <h3 className="mt-5 font-display text-xl font-medium">No tests yet</h3>
+      <h3 className="mt-5 font-display text-3xl">No tests yet</h3>
       <p className="mt-2 max-w-xs text-[15px] leading-relaxed text-muted-foreground">
         Create your first lactate testing session and start adding athletes and
         measurements.

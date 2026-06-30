@@ -64,7 +64,7 @@ export function ManualAnalyzer() {
     <div className="flex flex-col gap-6">
       <section>
         <h2 className="eyebrow mb-2 text-[11px] text-foreground">Stages</h2>
-        <div className="overflow-hidden border border-border">
+        <div className="overflow-hidden rounded-lg border border-border">
           <div className="grid grid-cols-[1.6rem_1fr_1fr_1fr_1.6rem] items-center gap-x-2 bg-muted/60 px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
             <span>#</span>
             <span>Lactate</span>
@@ -118,7 +118,7 @@ export function ManualAnalyzer() {
         <button
           type="button"
           onClick={() => setRows((rs) => [...rs, emptyRow()])}
-          className="mt-2 flex w-full items-center justify-center gap-2 border border-border py-2.5 text-xs font-bold uppercase tracking-[0.1em] hover:bg-muted"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-[24px] border border-border py-2.5 font-mono text-xs font-bold uppercase tracking-[0.15em] hover:bg-muted"
         >
           <Plus size={15} /> Add stage
         </button>

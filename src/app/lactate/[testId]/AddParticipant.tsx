@@ -61,7 +61,7 @@ export function AddParticipant({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex w-full items-center justify-center gap-2 border border-foreground/30 py-3 text-xs font-bold uppercase tracking-[0.1em] text-foreground transition-colors hover:bg-muted"
+        className="flex w-full items-center justify-center gap-2 rounded-[24px] border border-foreground/30 py-3 font-mono text-xs font-bold uppercase tracking-[0.15em] text-foreground transition-colors hover:bg-muted"
       >
         <UserPlus size={16} />
         Add athlete

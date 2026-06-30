@@ -112,7 +112,7 @@ function BaselineEditor({
       : "not set";
 
   return (
-    <div className="border border-border bg-card">
+    <div className="rounded-lg border border-border bg-card">
       <button
         type="button"
         onClick={() => setEditing((e) => !e)}
@@ -169,7 +169,7 @@ function BaselineEditor({
             type="button"
             onClick={save}
             disabled={saving}
-            className="flex items-center justify-center gap-2 border border-border py-2 text-xs font-bold uppercase tracking-[0.1em] hover:bg-muted disabled:opacity-50"
+            className="flex items-center justify-center gap-2 rounded-[24px] border border-border py-2 font-mono text-xs font-bold uppercase tracking-[0.15em] hover:bg-muted disabled:opacity-50"
           >
             {saving ? <LoaderCircle size={15} className="animate-spin" /> : null}
             Save baseline
@@ -206,7 +206,7 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))}
         placeholder={placeholder}
-        className="rounded-sm border border-input bg-background px-2 py-2 font-display text-lg font-bold tabular-nums outline-none focus:border-primary"
+        className="rounded-sm border border-input bg-background px-2 py-2 font-mono text-lg font-bold tabular-nums outline-none focus:border-primary"
       />
       <span className="text-[10px] text-muted-foreground">
         {display ? `= ${display}` : hint}

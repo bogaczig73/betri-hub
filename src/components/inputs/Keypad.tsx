@@ -9,7 +9,7 @@ interface KeypadProps {
 }
 
 const keyBase =
-  "flex h-16 items-center justify-center rounded-none bg-muted text-2xl font-semibold " +
+  "flex h-16 items-center justify-center rounded-lg bg-muted text-2xl font-semibold " +
   "transition-colors hover:bg-foreground/15 active:scale-[0.97] motion-reduce:active:scale-100 " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring select-none";
 

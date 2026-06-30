@@ -85,7 +85,7 @@ export function ParticipantsSection({
           No athletes yet. Add the first one above.
         </p>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
           {optimistic.map((p) => (
             <li key={p.id}>
               <ParticipantCard participant={p} testId={testId} />
