@@ -118,6 +118,9 @@ export function MeasurementSheet({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  // Only surface range errors once the user has tried to save — typing an
+  // out-of-range value shouldn't pop a message and shove the layout around.
+  const [attempted, setAttempted] = useState(false);
 
   // Reset whenever the sheet is (re)opened for a different measurement.
   useEffect(() => {
@@ -126,6 +129,7 @@ export function MeasurementSheet({
       setActive("lactate");
       setMode("keypad");
       setSaveError(null);
+      setAttempted(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -136,6 +140,7 @@ export function MeasurementSheet({
 
   const setActiveDigits = (next: string) => {
     setSaveError(null);
+    setAttempted(false);
     setDigits((d) => ({ ...d, [active]: next }));
   };
 
@@ -152,7 +157,8 @@ export function MeasurementSheet({
     heartRate: digits.hr ? parseInt(digits.hr, 10) : null,
   };
 
-  // Live range check so the reason a save is blocked is always visible.
+  // Range check — used to block the save and, only after an attempt, to explain
+  // why.
   const rangeError: string | null =
     values.lactate != null && values.lactate > LACTATE_MAX
       ? `Lactate seems too high (max ${LACTATE_MAX} mmol/L). Type it without a separator — e.g. 124 = 1.24.`
@@ -161,11 +167,17 @@ export function MeasurementSheet({
         ? `Heart rate should be between ${HR_MIN} and ${HR_MAX} bpm.`
         : null;
 
-  const canSave = values.lactate != null && rangeError == null && !saving;
-  const shownError = rangeError ?? saveError;
+  // Keep the button tappable while a value is out of range so the press can
+  // reveal the reason; lactate is still the one required field.
+  const canSave = values.lactate != null && !saving;
+  const shownError = (attempted ? rangeError : null) ?? saveError;
 
   const handleSave = async () => {
-    if (values.lactate == null || rangeError != null || saving) return;
+    if (values.lactate == null || saving) return;
+    if (rangeError != null) {
+      setAttempted(true);
+      return;
+    }
     setSaving(true);
     setSaveError(null);
     try {
