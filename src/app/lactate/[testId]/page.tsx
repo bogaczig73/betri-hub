@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { TopBar } from "@/components/TopBar";
 import { getTestDetail, listMembers } from "@/lib/db/queries";
 import { formatDate } from "@/lib/format";
+import { SPORTS, toSport } from "@/lib/lactate/sport";
 
 import { DeleteTest } from "./DeleteTest";
 import { type ParticipantVM } from "./ParticipantCard";
@@ -23,12 +24,13 @@ export default async function TestDetailPage({
   ]);
   if (!test) notFound();
 
+  const sport = toSport(test.sport);
   const participants: ParticipantVM[] = test.participants.map((p) => ({
     id: p.id,
     memberId: p.memberId,
     name: p.member.name,
     baselineLactate: p.baselineLactate != null ? Number(p.baselineLactate) : null,
-    baselineTempoSeconds: p.baselineTempoSeconds,
+    baselineIntensity: p.baselineIntensity,
     includeBaseline: p.includeBaseline,
     measurements: [...p.measurements]
       .sort((a, b) => a.stage - b.stage)
@@ -36,12 +38,12 @@ export default async function TestDetailPage({
         id: m.id,
         stage: m.stage,
         lactate: m.lactate != null ? Number(m.lactate) : null,
-        tempoSeconds: m.tempoSeconds,
+        intensity: m.intensity,
         heartRate: m.heartRate,
       })),
   }));
 
-  const subtitleParts = [formatDate(test.testDate)];
+  const subtitleParts = [SPORTS[sport].label, formatDate(test.testDate)];
   if (test.location) subtitleParts.push(test.location);
 
   return (
@@ -67,6 +69,7 @@ export default async function TestDetailPage({
 
         <ParticipantsSection
           testId={test.id}
+          sport={sport}
           participants={participants}
           allMembers={allMembers}
         />

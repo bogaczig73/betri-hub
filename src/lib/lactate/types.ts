@@ -2,9 +2,9 @@
  * Lactate-threshold calculation engine — shared types.
  *
  * Pure, framework-free. The engine works in a single, **ascending** intensity
- * space (higher intensity = harder effort). For running, where the app stores
- * pace (seconds/km, which *decreases* as effort rises), callers must convert to
- * a speed-like intensity before handing data to the engine — see `intensity.ts`.
+ * space (higher intensity = harder effort). Bike power is already ascending;
+ * running pace (seconds/km) *decreases* as effort rises, so callers convert it
+ * to a speed-like intensity before handing data to the engine — see `sport.ts`.
  *
  * This mirrors the `lactater` R package; see the spec and the saved reference
  * fixture for the methodology and expected outputs.

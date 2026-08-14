@@ -1,12 +1,16 @@
 "use client";
 
-import { LoaderCircle } from "lucide-react";
-import { useActionState } from "react";
+import { Bike, Footprints, LoaderCircle } from "lucide-react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/cn";
+import { SPORTS, type Sport } from "@/lib/lactate/sport";
 
 import { createTest, type CreateTestState } from "../actions";
+
+const SPORT_ICONS = { run: Footprints, bike: Bike } as const;
 
 const fieldClass =
   "h-12 w-full rounded-sm border border-input bg-card px-4 text-[15px] outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/30";
@@ -29,9 +33,44 @@ export function NewTestForm() {
     {},
   );
   const today = new Date().toISOString().slice(0, 10);
+  // Sport decides what a measurement is — pace or watts — so it can't be
+  // changed later without the numbers meaning something else.
+  const [sport, setSport] = useState<Sport>("run");
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
+      <input type="hidden" name="sport" value={sport} />
+
+      <div>
+        <span className={labelClass}>Sport</span>
+        <div className="grid grid-cols-2 gap-2">
+          {(Object.keys(SPORTS) as Sport[]).map((key) => {
+            const Icon = SPORT_ICONS[key];
+            const on = sport === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setSport(key)}
+                aria-pressed={on}
+                className={cn(
+                  "flex h-12 items-center justify-center gap-2 rounded-sm border text-[13px] font-semibold transition-colors",
+                  on
+                    ? "border-primary bg-primary-soft text-foreground"
+                    : "border-input bg-card text-muted-foreground hover:border-muted-foreground",
+                )}
+              >
+                <Icon size={18} />
+                {SPORTS[key].label}
+                <span className="font-mono text-[11px] font-normal opacity-70">
+                  {SPORTS[key].field.label.toLowerCase()}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div>
         <label htmlFor="title" className={labelClass}>
           Test name <span className="font-normal">(optional)</span>

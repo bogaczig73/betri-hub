@@ -1,31 +1,33 @@
-import { formatLactate, formatTempo } from "@/lib/format";
+import { formatLactate } from "@/lib/format";
+import { formatIntensity, type Sport } from "@/lib/lactate/sport";
 
 export interface ChartPoint {
-  speedKmh: number;
-  paceSeconds: number;
+  intensity: number;
   lactate: number;
 }
 
 export interface ChartMarker {
   label: string;
-  speedKmh: number;
+  intensity: number;
   lactate: number;
   color: string;
 }
 
 /**
- * Lactate curve with threshold markers. X is speed (ascending = faster), but
- * labelled with pace so it reads naturally for runners. Renders nothing below
- * two points.
+ * Lactate curve with threshold markers. X is the engine's ascending intensity
+ * (speed for run, watts for bike), but tick labels are rendered in the sport's
+ * own unit — so runners read pace. Renders nothing below two points.
  */
 export function AnalysisChart({
   points,
   markers = [],
+  sport,
 }: {
   points: ChartPoint[];
   markers?: ChartMarker[];
+  sport: Sport;
 }) {
-  const pts = [...points].sort((a, b) => a.speedKmh - b.speedKmh);
+  const pts = [...points].sort((a, b) => a.intensity - b.intensity);
   if (pts.length < 2) return null;
 
   const w = 320;
@@ -35,10 +37,10 @@ export function AnalysisChart({
   const padTop = 16;
   const padBottom = 30;
 
-  const speeds = pts.map((p) => p.speedKmh);
-  const markerSpeeds = markers.map((m) => m.speedKmh).filter(Number.isFinite);
-  const minX = Math.min(...speeds, ...markerSpeeds);
-  const maxX = Math.max(...speeds, ...markerSpeeds);
+  const xs = pts.map((p) => p.intensity);
+  const markerXs = markers.map((m) => m.intensity).filter(Number.isFinite);
+  const minX = Math.min(...xs, ...markerXs);
+  const maxX = Math.max(...xs, ...markerXs);
   const maxY = Math.max(...pts.map((p) => p.lactate)) * 1.12 || 1;
 
   const x = (s: number) =>
@@ -47,17 +49,14 @@ export function AnalysisChart({
     padTop + (1 - v / maxY) * (h - padTop - padBottom);
 
   const line = pts
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${x(p.speedKmh)} ${y(p.lactate)}`)
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${x(p.intensity)} ${y(p.lactate)}`)
     .join(" ");
-  const area = `${line} L ${x(pts[pts.length - 1].speedKmh)} ${
+  const area = `${line} L ${x(pts[pts.length - 1].intensity)} ${
     h - padBottom
-  } L ${x(pts[0].speedKmh)} ${h - padBottom} Z`;
+  } L ${x(pts[0].intensity)} ${h - padBottom} Z`;
 
-  // A few pace ticks along the x-axis.
-  const ticks = [0, 0.5, 1].map((t) => {
-    const s = minX + t * (maxX - minX);
-    return { s, pace: Math.round(3600 / s) };
-  });
+  // A few ticks along the x-axis, labelled in the sport's unit.
+  const ticks = [0, 0.5, 1].map((t) => minX + t * (maxX - minX));
 
   return (
     <div className="rounded-lg border border-border bg-muted/40 p-2">
@@ -76,12 +75,12 @@ export function AnalysisChart({
 
         {/* threshold markers behind the curve */}
         {markers.map((m, i) =>
-          Number.isFinite(m.speedKmh) ? (
+          Number.isFinite(m.intensity) ? (
             <g key={i}>
               <line
-                x1={x(m.speedKmh)}
+                x1={x(m.intensity)}
                 y1={padTop}
-                x2={x(m.speedKmh)}
+                x2={x(m.intensity)}
                 y2={h - padBottom}
                 stroke={m.color}
                 strokeWidth="1.5"
@@ -89,7 +88,7 @@ export function AnalysisChart({
                 opacity="0.9"
               />
               <text
-                x={x(m.speedKmh)}
+                x={x(m.intensity)}
                 y={padTop - 4}
                 textAnchor="middle"
                 fontSize="9"
@@ -115,7 +114,7 @@ export function AnalysisChart({
         {pts.map((p, i) => (
           <circle
             key={i}
-            cx={x(p.speedKmh)}
+            cx={x(p.intensity)}
             cy={y(p.lactate)}
             r="3"
             fill="var(--card)"
@@ -126,10 +125,10 @@ export function AnalysisChart({
 
         {/* marker dots at the threshold lactate */}
         {markers.map((m, i) =>
-          Number.isFinite(m.speedKmh) ? (
+          Number.isFinite(m.intensity) ? (
             <circle
               key={`d${i}`}
-              cx={x(m.speedKmh)}
+              cx={x(m.intensity)}
               cy={y(m.lactate)}
               r="3.5"
               fill={m.color}
@@ -137,17 +136,17 @@ export function AnalysisChart({
           ) : null,
         )}
 
-        {/* x-axis pace labels */}
+        {/* x-axis labels, in the sport's unit */}
         {ticks.map((t, i) => (
           <text
             key={i}
-            x={x(t.s)}
+            x={x(t)}
             y={h - 8}
             textAnchor={i === 0 ? "start" : i === ticks.length - 1 ? "end" : "middle"}
             fontSize="9"
             fill="var(--muted-foreground)"
           >
-            {formatTempo(t.pace)}
+            {formatIntensity(sport, t)}
           </text>
         ))}
 

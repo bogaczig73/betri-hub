@@ -1,7 +1,9 @@
 import {
+  Bike,
   CalendarDays,
   Calculator,
   Droplet,
+  Footprints,
   MapPin,
   Plus,
   Users,
@@ -13,6 +15,9 @@ import { Avatar } from "@/components/ui/Avatar";
 import { buttonClasses } from "@/components/ui/Button";
 import { listTests } from "@/lib/db/queries";
 import { formatDate } from "@/lib/format";
+import { SPORTS, toSport } from "@/lib/lactate/sport";
+
+const SPORT_ICONS = { run: Footprints, bike: Bike } as const;
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +45,10 @@ export default async function LactateListPage() {
           <EmptyState />
         ) : (
           <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {tests.map((test) => (
+            {tests.map((test) => {
+              const sport = toSport(test.sport);
+              const SportIcon = SPORT_ICONS[sport];
+              return (
               <li key={test.id}>
                 <Link
                   href={`/lactate/${test.id}`}
@@ -57,6 +65,10 @@ export default async function LactateListPage() {
                   </div>
 
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5">
+                      <SportIcon size={14} />
+                      {SPORTS[sport].label}
+                    </span>
                     <span className="inline-flex items-center gap-1.5">
                       <CalendarDays size={14} />
                       {formatDate(test.testDate)}
@@ -88,7 +100,8 @@ export default async function LactateListPage() {
                   ) : null}
                 </Link>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
       </main>

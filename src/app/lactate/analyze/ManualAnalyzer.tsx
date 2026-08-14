@@ -1,27 +1,25 @@
 "use client";
 
-import { Plus, X } from "lucide-react";
+import { Bike, Footprints, Plus, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { LactateAnalysisView } from "@/components/lactate/LactateAnalysisView";
 import { cn } from "@/lib/cn";
-import {
-  digitsToLactate,
-  digitsToTempo,
-  formatLactate,
-  formatTempo,
-} from "@/lib/format";
-import type { RunBaseline, RunMeasurement } from "@/lib/lactate/display";
+import { digitsToLactate, formatLactate } from "@/lib/format";
+import type { Baseline, Measurement } from "@/lib/lactate/display";
+import { SPORTS, type Sport } from "@/lib/lactate/sport";
 
 interface Row {
   id: number;
   lac: string;
-  pace: string;
+  intensity: string;
   hr: string;
 }
 
+const SPORT_ICONS = { run: Footprints, bike: Bike } as const;
+
 let nextId = 1;
-const emptyRow = (): Row => ({ id: nextId++, lac: "", pace: "", hr: "" });
+const emptyRow = (): Row => ({ id: nextId++, lac: "", intensity: "", hr: "" });
 
 export function ManualAnalyzer() {
   const [rows, setRows] = useState<Row[]>(() => [
@@ -31,9 +29,12 @@ export function ManualAnalyzer() {
     emptyRow(),
     emptyRow(),
   ]);
+  const [sport, setSport] = useState<Sport>("run");
   const [baseLac, setBaseLac] = useState("");
-  const [basePace, setBasePace] = useState("");
+  const [baseIntensity, setBaseIntensity] = useState("");
   const [include, setInclude] = useState(false);
+
+  const s = SPORTS[sport];
 
   const update = (id: number, key: keyof Row, value: string) =>
     setRows((rs) =>
@@ -42,33 +43,61 @@ export function ManualAnalyzer() {
       ),
     );
 
-  const measurements: RunMeasurement[] = useMemo(
+  const measurements: Measurement[] = useMemo(
     () =>
       rows
         .map((r) => ({
           lactate: r.lac ? digitsToLactate(r.lac) : null,
-          tempoSeconds: r.pace ? digitsToTempo(r.pace) : null,
+          intensity: SPORTS[sport].fromDigits(r.intensity),
           heartRate: r.hr ? parseInt(r.hr, 10) : null,
         }))
-        .filter((m) => m.lactate != null && m.tempoSeconds != null),
-    [rows],
+        .filter((m) => m.lactate != null && m.intensity != null),
+    [rows, sport],
   );
 
-  const baseline: RunBaseline = {
+  const baseline: Baseline = {
     baselineLactate: baseLac ? digitsToLactate(baseLac) : null,
-    baselineTempoSeconds: basePace ? digitsToTempo(basePace) : null,
+    baselineIntensity: s.fromDigits(baseIntensity),
     includeBaseline: include,
   };
 
   return (
     <div className="flex flex-col gap-6">
       <section>
-        <h2 className="eyebrow mb-2 text-[11px] text-foreground">Stages</h2>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h2 className="eyebrow text-[11px] text-foreground">Stages</h2>
+          {/* Sport picks the unit of the middle column: pace or watts. */}
+          <div className="flex overflow-hidden rounded-full border border-border">
+            {(Object.keys(SPORTS) as Sport[]).map((key) => {
+              const Icon = SPORT_ICONS[key];
+              const on = sport === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setSport(key)}
+                  aria-pressed={on}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors",
+                    on
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <Icon size={15} />
+                  {SPORTS[key].label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
         <div className="overflow-hidden rounded-lg border border-border">
           <div className="grid grid-cols-[1.6rem_1fr_1fr_1fr_1.6rem] items-center gap-x-2 bg-muted/60 px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
             <span>#</span>
             <span>Lactate</span>
-            <span>Pace /km</span>
+            <span>
+              {s.field.label} {s.unit}
+            </span>
             <span>HR</span>
             <span />
           </div>
@@ -88,10 +117,10 @@ export function ManualAnalyzer() {
                   onChange={(v) => update(r.id, "lac", v)}
                 />
                 <Cell
-                  value={r.pace}
-                  display={r.pace ? formatTempo(digitsToTempo(r.pace)) : ""}
-                  placeholder="5:42"
-                  onChange={(v) => update(r.id, "pace", v)}
+                  value={r.intensity}
+                  display={r.intensity ? s.format(s.fromDigits(r.intensity)) : ""}
+                  placeholder={s.field.placeholder}
+                  onChange={(v) => update(r.id, "intensity", v)}
                 />
                 <Cell
                   value={r.hr}
@@ -137,12 +166,17 @@ export function ManualAnalyzer() {
               onChange={setBaseLac}
             />
           </Labeled>
-          <Labeled label="Resting pace /km" hint="700 → 7:00">
+          <Labeled
+            label={`Resting ${s.field.label.toLowerCase()} ${s.unit}`}
+            hint={s.field.hint}
+          >
             <Cell
-              value={basePace}
-              display={basePace ? formatTempo(digitsToTempo(basePace)) : ""}
-              placeholder="7:00"
-              onChange={setBasePace}
+              value={baseIntensity}
+              display={
+                baseIntensity ? s.format(s.fromDigits(baseIntensity)) : ""
+              }
+              placeholder={s.field.placeholder}
+              onChange={setBaseIntensity}
             />
           </Labeled>
         </div>
@@ -167,7 +201,11 @@ export function ManualAnalyzer() {
 
       <section>
         <h2 className="eyebrow mb-3 text-[11px] text-foreground">Results</h2>
-        <LactateAnalysisView measurements={measurements} baseline={baseline} />
+        <LactateAnalysisView
+          measurements={measurements}
+          sport={sport}
+          baseline={baseline}
+        />
       </section>
     </div>
   );

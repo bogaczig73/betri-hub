@@ -4,6 +4,7 @@ import { Users } from "lucide-react";
 import { useOptimistic, useTransition } from "react";
 
 import type { MemberSuggestion } from "@/lib/db/queries";
+import type { Sport } from "@/lib/lactate/sport";
 
 import { addParticipant, addParticipantByName } from "../actions";
 import { AddParticipant } from "./AddParticipant";
@@ -11,10 +12,12 @@ import { ParticipantCard, type ParticipantVM } from "./ParticipantCard";
 
 export function ParticipantsSection({
   testId,
+  sport,
   participants,
   allMembers,
 }: {
   testId: string;
+  sport: Sport;
   participants: ParticipantVM[];
   allMembers: MemberSuggestion[];
 }) {
@@ -39,7 +42,7 @@ export function ParticipantsSection({
         name: member.name,
         measurements: [],
         baselineLactate: null,
-        baselineTempoSeconds: null,
+        baselineIntensity: null,
         includeBaseline: false,
       });
       await addParticipant(testId, member.id);
@@ -54,7 +57,7 @@ export function ParticipantsSection({
         name,
         measurements: [],
         baselineLactate: null,
-        baselineTempoSeconds: null,
+        baselineIntensity: null,
         includeBaseline: false,
       });
       await addParticipantByName(testId, name);
@@ -88,7 +91,7 @@ export function ParticipantsSection({
         <ul className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
           {optimistic.map((p) => (
             <li key={p.id}>
-              <ParticipantCard participant={p} testId={testId} />
+              <ParticipantCard participant={p} testId={testId} sport={sport} />
             </li>
           ))}
         </ul>

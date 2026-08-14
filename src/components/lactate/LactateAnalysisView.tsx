@@ -1,18 +1,19 @@
 "use client";
 
-import { AlertTriangle, Check } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { cn } from "@/lib/cn";
-import { formatLactate, formatTempo } from "@/lib/format";
+import { formatLactate } from "@/lib/format";
 import {
-  analyzeRunning,
-  type RunBaseline,
-  type RunMeasurement,
-  type RunResult,
+  analyzeTest,
+  type Baseline,
+  type Measurement,
+  type Point,
   summarise,
 } from "@/lib/lactate/display";
-import type { Consensus } from "@/lib/lactate/display";
+import { formatIntensity, SPORTS, type Sport } from "@/lib/lactate/sport";
+import type { Result } from "@/lib/lactate/types";
 
 import { AnalysisChart, type ChartMarker } from "./AnalysisChart";
 
@@ -28,10 +29,12 @@ const PAIRS: { value: string; label: string; lt1: string; lt2: string }[] = [
 
 export function LactateAnalysisView({
   measurements,
+  sport,
   baseline = null,
 }: {
-  measurements: RunMeasurement[];
-  baseline?: RunBaseline | null;
+  measurements: Measurement[];
+  sport: Sport;
+  baseline?: Baseline | null;
 }) {
   const [fit, setFit] = useState<
     "3rd degree polynomial" | "4th degree polynomial"
@@ -46,14 +49,16 @@ export function LactateAnalysisView({
   const [lt2Source, setLt2Source] = useState("Consensus");
 
   const analysis = useMemo(
-    () => analyzeRunning(measurements, baseline, { fit }),
-    [measurements, baseline, fit],
+    () => analyzeTest(measurements, baseline, sport, { fit }),
+    [measurements, baseline, sport, fit],
   );
+
+  const unitLabel = SPORTS[sport].field.label.toLowerCase();
 
   if (analysis.usable < 3) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
-        Add at least 3 measurements with both lactate and pace to compute
+        Add at least 3 measurements with both lactate and {unitLabel} to compute
         thresholds.
       </p>
     );
@@ -67,7 +72,7 @@ export function LactateAnalysisView({
       else n.add(m);
       return n;
     });
-  const toggleAll = (rows: RunResult[]) =>
+  const toggleAll = (rows: Result[]) =>
     setDeselected((s) => {
       const n = new Set(s);
       const allOn = rows.every((r) => !n.has(r.method));
@@ -80,13 +85,10 @@ export function LactateAnalysisView({
 
   // Each card shows either the consensus (median of selected methods) or a
   // single chosen method.
-  const sourced = (
-    rows: RunResult[],
-    source: string,
-  ): Consensus | null =>
+  const sourced = (rows: Result[], source: string): Point | null =>
     source === "Consensus"
       ? summarise(rows.filter((r) => isSelected(r.method)))
-      : asConsensus(rows.find((r) => r.method === source));
+      : asPoint(rows.find((r) => r.method === source));
 
   const lt1 = sourced(lt1Rows, lt1Source);
   const lt2 = sourced(lt2Rows, lt2Source);
@@ -114,14 +116,14 @@ export function LactateAnalysisView({
   if (lt1)
     markers.push({
       label: "LT1",
-      speedKmh: lt1.speedKmh,
+      intensity: lt1.intensity,
       lactate: lt1.lactate,
       color: LT1_COLOR,
     });
   if (lt2)
     markers.push({
       label: "LT2",
-      speedKmh: lt2.speedKmh,
+      intensity: lt2.intensity,
       lactate: lt2.lactate,
       color: LT2_COLOR,
     });
@@ -133,10 +135,10 @@ export function LactateAnalysisView({
         <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           Method set
         </span>
-        <select
+        <Dropdown
           value={currentPair}
-          onChange={(e) => applyPair(e.target.value)}
-          className="min-w-0 flex-1 rounded-sm border border-input bg-background px-2 py-1.5 text-xs font-semibold outline-none focus:border-primary"
+          onChange={applyPair}
+          className="min-w-0 flex-1"
         >
           {pairs.map((p) => (
             <option key={p.value} value={p.value}>
@@ -148,7 +150,7 @@ export function LactateAnalysisView({
               Custom (per-card)
             </option>
           ) : null}
-        </select>
+        </Dropdown>
       </label>
 
       {/* Headline cards — each driven by its own source dropdown. */}
@@ -157,6 +159,7 @@ export function LactateAnalysisView({
           title="LT1 · aerobic"
           color={LT1_COLOR}
           c={lt1}
+          sport={sport}
           source={lt1Source}
           methods={lt1Rows.map((r) => r.method)}
           onSource={setLt1Source}
@@ -165,13 +168,18 @@ export function LactateAnalysisView({
           title="LT2 · anaerobic"
           color={LT2_COLOR}
           c={lt2}
+          sport={sport}
           source={lt2Source}
           methods={lt2Rows.map((r) => r.method)}
           onSource={setLt2Source}
         />
       </div>
 
-      <AnalysisChart points={analysis.points} markers={markers} />
+      <AnalysisChart
+        points={analysis.points}
+        markers={markers}
+        sport={sport}
+      />
 
       {/* Fit selector */}
       <div className="flex items-center justify-between">
@@ -213,6 +221,7 @@ export function LactateAnalysisView({
           title="LT1 estimates"
           rows={lt1Rows}
           color={LT1_COLOR}
+          sport={sport}
           isSelected={isSelected}
           onToggle={toggle}
           onToggleAll={() => toggleAll(lt1Rows)}
@@ -221,6 +230,7 @@ export function LactateAnalysisView({
           title="LT2 estimates"
           rows={lt2Rows}
           color={LT2_COLOR}
+          sport={sport}
           isSelected={isSelected}
           onToggle={toggle}
           onToggleAll={() => toggleAll(lt2Rows)}
@@ -237,27 +247,61 @@ export function LactateAnalysisView({
   );
 }
 
-function asConsensus(r: RunResult | undefined): Consensus | null {
-  if (!r || r.paceSeconds == null || !Number.isFinite(r.speedKmh)) return null;
-  return {
-    speedKmh: r.speedKmh,
-    paceSeconds: r.paceSeconds,
-    lactate: r.lactate,
-    heartRate: r.heartRate,
-  };
+/**
+ * Native <select> restyled to the app's input language: appearance stripped,
+ * 2px token-bordered box, accent focus, and a custom chevron so it matches the
+ * other inputs across every theme.
+ */
+function Dropdown({
+  value,
+  onChange,
+  ariaLabel,
+  className,
+  children,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  ariaLabel?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={cn("relative", className)}>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={ariaLabel}
+        className="w-full cursor-pointer appearance-none truncate rounded-sm border border-input bg-background py-1.5 pl-2.5 pr-8 text-xs font-semibold text-foreground outline-none transition-colors hover:border-muted-foreground focus:border-primary"
+      >
+        {children}
+      </select>
+      <ChevronDown
+        size={14}
+        strokeWidth={2.5}
+        className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+      />
+    </div>
+  );
+}
+
+function asPoint(r: Result | undefined): Point | null {
+  if (!r || !Number.isFinite(r.intensity)) return null;
+  return { intensity: r.intensity, lactate: r.lactate, heartRate: r.heartRate };
 }
 
 function SummaryCard({
   title,
   color,
   c,
+  sport,
   source,
   methods,
   onSource,
 }: {
   title: string;
   color: string;
-  c: Consensus | null;
+  c: Point | null;
+  sport: Sport;
   source: string;
   methods: string[];
   onSource: (s: string) => void;
@@ -272,11 +316,11 @@ function SummaryCard({
           {title}
         </span>
       </div>
-      <select
+      <Dropdown
         value={source}
-        onChange={(e) => onSource(e.target.value)}
-        aria-label={`${title} source`}
-        className="mt-1 w-full max-w-full truncate rounded-sm border border-input bg-background px-1.5 py-1 text-[11px] font-semibold outline-none focus:border-primary"
+        onChange={onSource}
+        ariaLabel={`${title} source`}
+        className="mt-1"
       >
         <option value="Consensus">Consensus (median)</option>
         {methods.map((m) => (
@@ -284,13 +328,13 @@ function SummaryCard({
             {m}
           </option>
         ))}
-      </select>
+      </Dropdown>
       {c ? (
         <>
           <div className="mt-1 font-mono text-3xl font-bold leading-none tabular-nums">
-            {formatTempo(c.paceSeconds)}
+            {formatIntensity(sport, c.intensity)}
             <span className="ml-1 text-sm font-medium text-muted-foreground">
-              /km
+              {SPORTS[sport].unit}
             </span>
           </div>
           <div className="mt-1 text-xs text-muted-foreground">
@@ -323,13 +367,15 @@ function MethodGroup({
   title,
   rows,
   color,
+  sport,
   isSelected,
   onToggle,
   onToggleAll,
 }: {
   title: string;
-  rows: RunResult[];
+  rows: Result[];
   color: string;
+  sport: Sport;
   isSelected: (m: string) => boolean;
   onToggle: (m: string) => void;
   onToggleAll: () => void;
@@ -360,7 +406,7 @@ function MethodGroup({
         <div className="grid grid-cols-[1.25rem_1fr_auto_auto_auto] items-center gap-x-3 bg-muted/60 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
           <span />
           <span>Method</span>
-          <span className="text-right">Pace</span>
+          <span className="text-right">{SPORTS[sport].field.label}</span>
           <span className="text-right">HR</span>
           <span className="text-right">Lac</span>
         </div>
@@ -389,7 +435,7 @@ function MethodGroup({
                     <span className="truncate">{r.method}</span>
                   </span>
                   <span className="text-right font-mono font-bold tabular-nums">
-                    {r.paceSeconds != null ? formatTempo(r.paceSeconds) : "—"}
+                    {formatIntensity(sport, r.intensity)}
                   </span>
                   <span className="text-right tabular-nums text-muted-foreground">
                     {r.heartRate != null ? Math.round(r.heartRate) : "—"}

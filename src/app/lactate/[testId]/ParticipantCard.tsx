@@ -10,7 +10,8 @@ import {
   type MeasurementValues,
 } from "@/components/inputs/MeasurementSheet";
 import { cn } from "@/lib/cn";
-import { formatLactate, formatTempo } from "@/lib/format";
+import { formatLactate } from "@/lib/format";
+import { SPORTS, type Sport } from "@/lib/lactate/sport";
 
 import {
   addMeasurement,
@@ -24,7 +25,8 @@ export interface MeasurementVM {
   id: string;
   stage: number;
   lactate: number | null;
-  tempoSeconds: number | null;
+  /** Pace (s/km) or power (W), per the test's sport. */
+  intensity: number | null;
   heartRate: number | null;
 }
 
@@ -34,16 +36,18 @@ export interface ParticipantVM {
   name: string;
   measurements: MeasurementVM[];
   baselineLactate: number | null;
-  baselineTempoSeconds: number | null;
+  baselineIntensity: number | null;
   includeBaseline: boolean;
 }
 
 export function ParticipantCard({
   participant,
   testId,
+  sport,
 }: {
   participant: ParticipantVM;
   testId: string;
+  sport: Sport;
 }) {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<MeasurementVM | null>(null);
@@ -53,7 +57,7 @@ export function ParticipantCard({
 
   const measurements = participant.measurements;
   const usable = measurements.filter(
-    (m) => m.lactate != null && m.tempoSeconds != null,
+    (m) => m.lactate != null && m.intensity != null,
   ).length;
 
   return (
@@ -105,7 +109,10 @@ export function ParticipantCard({
                   value={formatLactate(m.lactate)}
                   emphasis
                 />
-                <Stat label="Pace" value={formatTempo(m.tempoSeconds)} />
+                <Stat
+                  label={SPORTS[sport].field.label}
+                  value={SPORTS[sport].format(m.intensity)}
+                />
                 <Stat
                   label="HR"
                   value={m.heartRate != null ? String(m.heartRate) : "—"}
@@ -136,7 +143,7 @@ export function ParticipantCard({
           </button>
           {showChart ? (
             <div className="mt-1">
-              <LactateChart measurements={measurements} />
+              <LactateChart measurements={measurements} sport={sport} />
             </div>
           ) : null}
         </div>
@@ -166,6 +173,7 @@ export function ParticipantCard({
         open={adding}
         onClose={() => setAdding(false)}
         title={`${participant.name} · new measurement`}
+        sport={sport}
         onSave={(values: MeasurementValues) =>
           addMeasurement(participant.id, testId, values)
         }
@@ -175,6 +183,7 @@ export function ParticipantCard({
         open={editing != null}
         onClose={() => setEditing(null)}
         title={`${participant.name} · edit`}
+        sport={sport}
         initial={editing}
         onSave={(values: MeasurementValues) =>
           editing
@@ -194,14 +203,15 @@ export function ParticipantCard({
         participantId={participant.id}
         participantName={participant.name}
         testId={testId}
+        sport={sport}
         measurements={measurements.map((m) => ({
           lactate: m.lactate,
-          tempoSeconds: m.tempoSeconds,
+          intensity: m.intensity,
           heartRate: m.heartRate,
         }))}
         initialBaseline={{
           baselineLactate: participant.baselineLactate,
-          baselineTempoSeconds: participant.baselineTempoSeconds,
+          baselineIntensity: participant.baselineIntensity,
           includeBaseline: participant.includeBaseline,
         }}
       />

@@ -37,8 +37,9 @@ export const members = pgTable(
 );
 
 /**
- * A lactate testing session. v1 supports running only (tempo = pace m:ss / km),
- * but `sport` is kept so other sports can be added later.
+ * A lactate testing session. `sport` decides what a measurement's `intensity`
+ * means for every participant in the test: "run" → pace (seconds/km),
+ * "bike" → power (watts). See src/lib/lactate/sport.ts.
  */
 export const lactateTests = pgTable("lactate_tests", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -70,10 +71,12 @@ export const lactateParticipants = pgTable(
       .notNull()
       .references(() => members.id, { onDelete: "restrict" }),
     position: integer("position").notNull().default(0),
-    // Resting/warm-up lactate (mmol/L) and the pace at which it was taken.
+    // Resting/warm-up lactate (mmol/L) and the intensity it was taken at.
     // Used by the analysis engine for Bsln+ and the baseline-included fits.
     baselineLactate: numeric("baseline_lactate", { precision: 5, scale: 2 }),
-    baselineTempoSeconds: integer("baseline_tempo_seconds"),
+    // ponytail: column keeps its run-only name from v1; the value is whatever
+    // the test's sport says (s/km or W). Rename it if a migration lands anyway.
+    baselineIntensity: integer("baseline_tempo_seconds"),
     // Whether to feed the baseline point into Log-log / LTP / LTratio fits.
     includeBaseline: boolean("include_baseline").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -92,7 +95,8 @@ export const lactateParticipants = pgTable(
 /**
  * A single reading for one participant at one stage of the step test.
  * - lactate: mmol/L, two decimals (e.g. 1.24)
- * - tempoSeconds: running pace, seconds per km (e.g. 342 = 5:42 /km)
+ * - intensity: per the test's sport — run pace in seconds/km (342 = 5:42 /km)
+ *   or bike power in watts (250)
  * - heartRate: optional bpm
  */
 export const lactateMeasurements = pgTable(
@@ -104,7 +108,8 @@ export const lactateMeasurements = pgTable(
       .references(() => lactateParticipants.id, { onDelete: "cascade" }),
     stage: integer("stage").notNull().default(1),
     lactate: numeric("lactate", { precision: 5, scale: 2 }),
-    tempoSeconds: integer("tempo_seconds"),
+    // ponytail: see baselineIntensity — legacy column name, sport-dependent value.
+    intensity: integer("tempo_seconds"),
     heartRate: integer("heart_rate"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()

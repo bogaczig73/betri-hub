@@ -7,6 +7,8 @@
  */
 
 import { analyze } from "./analyze";
+import { analyzeTest } from "./display";
+import { SPORTS } from "./sport";
 import type { Stage } from "./types";
 
 // The intensity-0 row is the rest/baseline point. With include_baseline=FALSE
@@ -122,3 +124,50 @@ try {
 } catch (e) {
   console.log(`monotonic check: throws ok (${(e as Error).message.slice(0, 40)}…)`);
 }
+
+// ---------- sport adapters ----------
+// The fixture above is cycling (watts), so running it through the bike adapter
+// exercises the whole UI path against the same reference numbers.
+console.log("\n== sport adapters ==");
+
+const bike = analyzeTest(
+  demo.map((s) => ({
+    lactate: s.lactate,
+    intensity: s.intensity,
+    heartRate: s.heartRate,
+  })),
+  {
+    baselineLactate: baseline.lactate,
+    baselineIntensity: baseline.intensity,
+    includeBaseline: true,
+  },
+  "bike",
+);
+// baselineIntensity is 0 here, so it can't be fed into the fit (see analyzeTest)
+// — compare against the baseline-EXCLUDED engine run instead.
+const bikeRef = new Map(
+  analyze(demo, {
+    fit: "3rd degree polynomial",
+    baselineLactate: baseline.lactate,
+  }).results.map((r) => [r.method, r.intensity]),
+);
+const bikeDrift = Math.max(
+  ...bike.results.map((r) =>
+    Math.abs(r.intensity - (bikeRef.get(r.method) ?? r.intensity)),
+  ),
+);
+console.log(
+  `bike path: ${bike.results.length} results, usable=${bike.usable}, max drift vs engine ${bikeDrift.toFixed(3)} W`,
+);
+if (bikeDrift > 1e-9) throw new Error("bike adapter must not alter intensities");
+
+// Run: pace is descending, so it must survive the round-trip through speed.
+const run = SPORTS.run;
+for (const pace of [180, 342, 425, 700]) {
+  const back = run.fromIntensity(run.toIntensity(pace));
+  if (back !== pace) throw new Error(`pace round-trip ${pace} → ${back}`);
+}
+// A faster pace must map to a HIGHER intensity, or every method inverts.
+if (run.toIntensity(300) <= run.toIntensity(360))
+  throw new Error("run intensity must ascend as pace drops");
+console.log("run path: pace round-trips and ascends with speed — ok");

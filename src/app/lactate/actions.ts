@@ -26,6 +26,8 @@ const createTestSchema = z.object({
     .optional(),
   location: z.string().trim().max(120).optional(),
   notes: z.string().trim().max(500).optional(),
+  // Decides whether measurements are pace or watts — see lib/lactate/sport.ts.
+  sport: z.enum(["run", "bike"]).default("run"),
 });
 
 export type CreateTestState = { error?: string };
@@ -39,6 +41,7 @@ export async function createTest(
     testDate: formData.get("testDate") || undefined,
     location: formData.get("location") || undefined,
     notes: formData.get("notes") || undefined,
+    sport: formData.get("sport") || undefined,
   });
 
   if (!parsed.success) {
@@ -54,6 +57,7 @@ export async function createTest(
     .values({
       title,
       testDate,
+      sport: data.sport,
       location: data.location || null,
       notes: data.notes || null,
     })
@@ -100,7 +104,7 @@ export async function removeParticipant(participantId: string, testId: string) {
 
 const baselineSchema = z.object({
   baselineLactate: z.number().min(0).max(40).nullable(),
-  baselineTempoSeconds: z.number().int().min(0).max(36000).nullable(),
+  baselineIntensity: z.number().int().min(0).max(36000).nullable(),
   includeBaseline: z.boolean(),
 });
 
@@ -115,7 +119,7 @@ export async function setParticipantBaseline(
     .set({
       baselineLactate:
         data.baselineLactate != null ? data.baselineLactate.toFixed(2) : null,
-      baselineTempoSeconds: data.baselineTempoSeconds,
+      baselineIntensity: data.baselineIntensity,
       includeBaseline: data.includeBaseline,
     })
     .where(eq(lactateParticipants.id, participantId));
@@ -126,7 +130,9 @@ export async function setParticipantBaseline(
 
 const measurementSchema = z.object({
   lactate: z.number().min(0).max(40).nullable().optional(),
-  tempoSeconds: z.number().int().min(0).max(36000).nullable().optional(),
+  // Pace (s/km) or power (W) depending on the test's sport; one loose bound
+  // covers both.
+  intensity: z.number().int().min(0).max(36000).nullable().optional(),
   heartRate: z.number().int().min(20).max(260).nullable().optional(),
 });
 
@@ -146,7 +152,7 @@ export async function addMeasurement(
     participantId,
     stage: maxStage + 1,
     lactate: data.lactate != null ? data.lactate.toFixed(2) : null,
-    tempoSeconds: data.tempoSeconds ?? null,
+    intensity: data.intensity ?? null,
     heartRate: data.heartRate ?? null,
   });
 
@@ -163,7 +169,7 @@ export async function updateMeasurement(
     .update(lactateMeasurements)
     .set({
       lactate: data.lactate != null ? data.lactate.toFixed(2) : null,
-      tempoSeconds: data.tempoSeconds ?? null,
+      intensity: data.intensity ?? null,
       heartRate: data.heartRate ?? null,
     })
     .where(eq(lactateMeasurements.id, measurementId));

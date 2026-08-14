@@ -6,25 +6,20 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { cn } from "@/lib/cn";
-import {
-  digitsToLactate,
-  digitsToTempo,
-  formatLactate,
-  formatTempo,
-  lactateToDigits,
-  tempoToDigits,
-} from "@/lib/format";
+import { digitsToLactate, formatLactate, lactateToDigits } from "@/lib/format";
+import { SPORTS, type Sport } from "@/lib/lactate/sport";
 
 import { CircularDial } from "./CircularDial";
 import { Keypad } from "./Keypad";
 
 export interface MeasurementValues {
   lactate: number | null;
-  tempoSeconds: number | null;
+  /** Pace (s/km) or power (W) — see the test's sport. */
+  intensity: number | null;
   heartRate: number | null;
 }
 
-type FieldKey = "lactate" | "tempo" | "hr";
+type FieldKey = "lactate" | "intensity" | "hr";
 
 interface FieldConfig {
   key: FieldKey;
@@ -38,57 +33,55 @@ interface FieldConfig {
   dial: { min: number; max: number; step: number; default: number };
 }
 
-const FIELDS: FieldConfig[] = [
-  {
-    key: "lactate",
-    label: "Lactate",
-    unit: "mmol/L",
-    hint: "Type 124 → 1.24",
-    maxDigits: 4,
-    toValue: digitsToLactate,
-    toDigits: lactateToDigits,
-    format: (v) => (v == null ? "—" : formatLactate(v)),
-    dial: { min: 0, max: 20, step: 0.1, default: 2 },
-  },
-  {
-    key: "tempo",
-    label: "Pace",
-    unit: "/km",
-    hint: "Type 542 → 5:42",
-    maxDigits: 4,
-    toValue: digitsToTempo,
-    toDigits: tempoToDigits,
-    format: (v) => (v == null ? "—" : formatTempo(v)),
-    dial: { min: 120, max: 720, step: 1, default: 300 },
-  },
-  {
-    key: "hr",
-    label: "Heart rate",
-    unit: "bpm",
-    hint: "Optional",
-    maxDigits: 3,
-    toValue: (d) => (d ? parseInt(d, 10) : null),
-    toDigits: (v) => String(Math.round(v)),
-    format: (v) => (v == null ? "—" : String(Math.round(v))),
-    dial: { min: 60, max: 220, step: 1, default: 140 },
-  },
-];
-
-const fieldByKey = Object.fromEntries(FIELDS.map((f) => [f.key, f])) as Record<
-  FieldKey,
-  FieldConfig
->;
+/** The middle chip is pace or watts depending on the test's sport. */
+function fieldsFor(sport: Sport): FieldConfig[] {
+  const s = SPORTS[sport];
+  return [
+    {
+      key: "lactate",
+      label: "Lactate",
+      unit: "mmol/L",
+      hint: "Type 124 → 1.24",
+      maxDigits: 4,
+      toValue: digitsToLactate,
+      toDigits: lactateToDigits,
+      format: (v) => (v == null ? "—" : formatLactate(v)),
+      dial: { min: 0, max: 20, step: 0.1, default: 2 },
+    },
+    {
+      key: "intensity",
+      label: s.field.label,
+      unit: s.unit,
+      hint: s.field.hint,
+      maxDigits: s.field.maxDigits,
+      toValue: s.fromDigits,
+      toDigits: s.toDigits,
+      format: s.format,
+      dial: s.field.dial,
+    },
+    {
+      key: "hr",
+      label: "Heart rate",
+      unit: "bpm",
+      hint: "Optional",
+      maxDigits: 3,
+      toValue: (d) => (d ? parseInt(d, 10) : null),
+      toDigits: (v) => String(Math.round(v)),
+      format: (v) => (v == null ? "—" : String(Math.round(v))),
+      dial: { min: 60, max: 220, step: 1, default: 140 },
+    },
+  ];
+}
 
 // Keep these in sync with the zod limits in src/app/lactate/actions.ts.
 const LACTATE_MAX = 40;
 const HR_MIN = 20;
 const HR_MAX = 260;
 
-function valuesToDigits(initial?: MeasurementValues | null) {
+function valuesToDigits(sport: Sport, initial?: MeasurementValues | null) {
   return {
     lactate: initial?.lactate != null ? lactateToDigits(initial.lactate) : "",
-    tempo:
-      initial?.tempoSeconds != null ? tempoToDigits(initial.tempoSeconds) : "",
+    intensity: SPORTS[sport].toDigits(initial?.intensity),
     hr: initial?.heartRate != null ? String(initial.heartRate) : "",
   } satisfies Record<FieldKey, string>;
 }
@@ -97,6 +90,7 @@ interface MeasurementSheetProps {
   open: boolean;
   onClose: () => void;
   title: string;
+  sport: Sport;
   initial?: MeasurementValues | null;
   onSave: (values: MeasurementValues) => Promise<void>;
   onDelete?: () => Promise<void>;
@@ -106,12 +100,18 @@ export function MeasurementSheet({
   open,
   onClose,
   title,
+  sport,
   initial,
   onSave,
   onDelete,
 }: MeasurementSheetProps) {
+  const fields = fieldsFor(sport);
+  const fieldByKey = Object.fromEntries(
+    fields.map((f) => [f.key, f]),
+  ) as Record<FieldKey, FieldConfig>;
+
   const [digits, setDigits] = useState<Record<FieldKey, string>>(
-    valuesToDigits(initial),
+    valuesToDigits(sport, initial),
   );
   const [active, setActive] = useState<FieldKey>("lactate");
   const [mode, setMode] = useState<"keypad" | "dial">("keypad");
@@ -125,7 +125,7 @@ export function MeasurementSheet({
   // Reset whenever the sheet is (re)opened for a different measurement.
   useEffect(() => {
     if (open) {
-      setDigits(valuesToDigits(initial));
+      setDigits(valuesToDigits(sport, initial));
       setActive("lactate");
       setMode("keypad");
       setSaveError(null);
@@ -153,7 +153,7 @@ export function MeasurementSheet({
 
   const values: MeasurementValues = {
     lactate: digits.lactate ? digitsToLactate(digits.lactate) : null,
-    tempoSeconds: digits.tempo ? digitsToTempo(digits.tempo) : null,
+    intensity: SPORTS[sport].fromDigits(digits.intensity),
     heartRate: digits.hr ? parseInt(digits.hr, 10) : null,
   };
 
@@ -221,7 +221,7 @@ export function MeasurementSheet({
       <div className="flex flex-col gap-4">
         {/* Value chips — tap to choose which field the pad/dial controls. */}
         <div className="grid grid-cols-3 gap-2">
-          {FIELDS.map((f) => {
+          {fields.map((f) => {
             const isActive = f.key === active;
             const v = f.toValue(digits[f.key]);
             return (

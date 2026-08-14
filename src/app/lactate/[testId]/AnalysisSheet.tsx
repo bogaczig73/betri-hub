@@ -6,15 +6,9 @@ import { useEffect, useState, useTransition } from "react";
 import { LactateAnalysisView } from "@/components/lactate/LactateAnalysisView";
 import { Sheet } from "@/components/ui/Sheet";
 import { cn } from "@/lib/cn";
-import {
-  digitsToLactate,
-  digitsToTempo,
-  formatLactate,
-  formatTempo,
-  lactateToDigits,
-  tempoToDigits,
-} from "@/lib/format";
-import type { RunBaseline, RunMeasurement } from "@/lib/lactate/display";
+import { digitsToLactate, formatLactate, lactateToDigits } from "@/lib/format";
+import type { Baseline, Measurement } from "@/lib/lactate/display";
+import { SPORTS, type Sport } from "@/lib/lactate/sport";
 
 import { setParticipantBaseline } from "../actions";
 
@@ -24,6 +18,7 @@ export function AnalysisSheet({
   participantId,
   participantName,
   testId,
+  sport,
   measurements,
   initialBaseline,
 }: {
@@ -32,10 +27,11 @@ export function AnalysisSheet({
   participantId: string;
   participantName: string;
   testId: string;
-  measurements: RunMeasurement[];
-  initialBaseline: RunBaseline;
+  sport: Sport;
+  measurements: Measurement[];
+  initialBaseline: Baseline;
 }) {
-  const [baseline, setBaseline] = useState<RunBaseline>(initialBaseline);
+  const [baseline, setBaseline] = useState<Baseline>(initialBaseline);
   useEffect(() => setBaseline(initialBaseline), [initialBaseline]);
 
   return (
@@ -49,10 +45,15 @@ export function AnalysisSheet({
         <BaselineEditor
           participantId={participantId}
           testId={testId}
+          sport={sport}
           baseline={baseline}
           onChange={setBaseline}
         />
-        <LactateAnalysisView measurements={measurements} baseline={baseline} />
+        <LactateAnalysisView
+          measurements={measurements}
+          sport={sport}
+          baseline={baseline}
+        />
       </div>
     </Sheet>
   );
@@ -61,37 +62,38 @@ export function AnalysisSheet({
 function BaselineEditor({
   participantId,
   testId,
+  sport,
   baseline,
   onChange,
 }: {
   participantId: string;
   testId: string;
-  baseline: RunBaseline;
-  onChange: (b: RunBaseline) => void;
+  sport: Sport;
+  baseline: Baseline;
+  onChange: (b: Baseline) => void;
 }) {
+  const s = SPORTS[sport];
   const [editing, setEditing] = useState(false);
   const [lacDigits, setLacDigits] = useState(
     baseline.baselineLactate != null
       ? lactateToDigits(baseline.baselineLactate)
       : "",
   );
-  const [paceDigits, setPaceDigits] = useState(
-    baseline.baselineTempoSeconds != null
-      ? tempoToDigits(baseline.baselineTempoSeconds)
-      : "",
+  const [intensityDigits, setIntensityDigits] = useState(
+    s.toDigits(baseline.baselineIntensity),
   );
   const [include, setInclude] = useState(baseline.includeBaseline);
   const [saving, startSave] = useTransition();
   const [saved, setSaved] = useState(false);
 
   const lactate = lacDigits ? digitsToLactate(lacDigits) : null;
-  const pace = paceDigits ? digitsToTempo(paceDigits) : null;
+  const intensity = s.fromDigits(intensityDigits);
 
   const save = () => {
     startSave(async () => {
-      const next: RunBaseline = {
+      const next: Baseline = {
         baselineLactate: lactate,
-        baselineTempoSeconds: pace,
+        baselineIntensity: intensity,
         includeBaseline: include,
       };
       await setParticipantBaseline(participantId, testId, next);
@@ -105,8 +107,8 @@ function BaselineEditor({
   const summary =
     baseline.baselineLactate != null
       ? `${formatLactate(baseline.baselineLactate)} mmol/L${
-          baseline.baselineTempoSeconds != null
-            ? ` @ ${formatTempo(baseline.baselineTempoSeconds)}/km`
+          baseline.baselineIntensity != null
+            ? ` @ ${s.format(baseline.baselineIntensity)}${s.unit}`
             : ""
         }${baseline.includeBaseline ? " · in fit" : ""}`
       : "not set";
@@ -140,12 +142,12 @@ function BaselineEditor({
               onChange={setLacDigits}
             />
             <Field
-              label="Resting pace /km"
-              hint="700 → 7:00"
-              value={paceDigits}
+              label={`Resting ${s.field.label.toLowerCase()} ${s.unit}`}
+              hint={s.field.hint}
+              value={intensityDigits}
               placeholder="—"
-              display={pace != null ? formatTempo(pace) : ""}
-              onChange={setPaceDigits}
+              display={intensity != null ? s.format(intensity) : ""}
+              onChange={setIntensityDigits}
             />
           </div>
           <button

@@ -1,22 +1,30 @@
-import { formatLactate, formatTempo } from "@/lib/format";
+import { formatLactate } from "@/lib/format";
+import { SPORTS, type Sport } from "@/lib/lactate/sport";
 
 interface Point {
   stage: number;
   lactate: number | null;
-  tempoSeconds: number | null;
+  intensity: number | null;
 }
 
 /**
  * Compact lactate curve: lactate (y) over successive stages (x). Points are
- * labelled with pace when available. Renders nothing for < 2 lactate readings.
+ * labelled with pace/power when available. Renders nothing for < 2 lactate
+ * readings.
  */
-export function LactateChart({ measurements }: { measurements: Point[] }) {
+export function LactateChart({
+  measurements,
+  sport,
+}: {
+  measurements: Point[];
+  sport: Sport;
+}) {
   const pts = measurements
     .filter((m) => m.lactate != null)
     .map((m) => ({
       stage: m.stage,
       lactate: m.lactate as number,
-      tempoSeconds: m.tempoSeconds,
+      intensity: m.intensity,
     }));
 
   if (pts.length < 2) return null;
@@ -95,7 +103,7 @@ export function LactateChart({ measurements }: { measurements: Point[] }) {
               fontSize="9"
               fill="var(--muted-foreground)"
             >
-              {p.tempoSeconds != null ? formatTempo(p.tempoSeconds) : i + 1}
+              {p.intensity != null ? SPORTS[sport].format(p.intensity) : i + 1}
             </text>
           </g>
         ))}

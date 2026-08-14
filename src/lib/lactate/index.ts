@@ -14,7 +14,9 @@ export type {
   Stage,
 } from "./types";
 export {
-  paceToSpeed,
-  speedToPace,
-  speedToIntensityStages,
-} from "./intensity";
+  formatIntensity,
+  SPORTS,
+  type Sport,
+  type SportSpec,
+  toSport,
+} from "./sport";
