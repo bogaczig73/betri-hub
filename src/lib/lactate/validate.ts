@@ -125,6 +125,19 @@ try {
   console.log(`monotonic check: throws ok (${(e as Error).message.slice(0, 40)}…)`);
 }
 
+// Stage-2 dip: the Bsln+ floor must be the LOWEST reading, not the first one.
+const dipped = analyze([
+  { intensity: 12.0, lactate: 1.5 },
+  { intensity: 12.9, lactate: 1.2 }, // dip as warm-up lactate clears
+  { intensity: 13.8, lactate: 1.4 },
+  { intensity: 15.0, lactate: 2.1 },
+  { intensity: 16.4, lactate: 3.4 },
+]);
+const bsln05 = dipped.results.find((r) => r.method === "Bsln + 0.5");
+console.log(`stage-2 dip: Bsln+0.5 targets ${bsln05?.lactate.toFixed(2)} mmol/L`);
+if (Math.abs((bsln05?.lactate ?? 0) - 1.7) > 1e-9)
+  throw new Error("Bsln+ must build on the lowest lactate (1.2), not the first (1.5)");
+
 // ---------- sport adapters ----------
 // The fixture above is cycling (watts), so running it through the bike adapter
 // exercises the whole UI path against the same reference numbers.

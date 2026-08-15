@@ -59,7 +59,12 @@ export function analyze(
 
   const xs = stages.map((s) => s.intensity);
   const ys = stages.map((s) => s.lactate);
-  const baselineLactate = options.baselineLactate ?? ys[0];
+  // Baseline for the Bsln+ methods. Deliberate deviation from lactater, which
+  // takes the first row: lactate often DIPS on stage 2 as warm-up lactate
+  // clears, and "baseline + 0.5" means 0.5 above the athlete's true floor, not
+  // above whatever the first draw happened to catch. An explicit resting value
+  // (the baseline editor) still wins.
+  const baselineLactate = options.baselineLactate ?? Math.min(...ys);
 
   // 3. Baseline-included series (a synthetic point below the first stage).
   let inclXs = xs;
