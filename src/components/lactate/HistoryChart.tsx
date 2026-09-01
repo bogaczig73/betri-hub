@@ -1,14 +1,8 @@
-"use client";
-
-import { Check, Plus } from "lucide-react";
-import { useState } from "react";
-
 import { formatLactate } from "@/lib/format";
 import { SPORTS, formatIntensity, type Sport } from "@/lib/lactate/sport";
 
 export interface HistorySeries {
   id: string;
-  label: string;
   color: string;
   /** SVG dash pattern — series stay distinguishable without colour vision. */
   dash: string;
@@ -24,8 +18,8 @@ export interface HistorySeries {
  * One athlete's lactate curves stacked on a single pair of axes — one line per
  * test, so a shift left/right over time is the whole point of the picture.
  * X is the engine's ascending intensity, labelled in the sport's own unit;
- * Y is lactate. Tap a legend entry to drop that test out of the picture; the
- * axes rescale to whatever is left.
+ * Y is lactate. Which curves arrive is the caller's decision — the test list
+ * below the chart owns that — so the axes here simply fit whatever is passed.
  */
 export function HistoryChart({
   series,
@@ -34,17 +28,12 @@ export function HistoryChart({
   series: HistorySeries[];
   sport: Sport;
 }) {
-  const [hidden, setHidden] = useState<Record<string, boolean>>({});
-
-  const drawable = series.filter((s) => s.points.length >= 2);
-  const lines = drawable
-    .filter((s) => !hidden[s.id])
+  const lines = series
+    .filter((s) => s.points.length >= 2)
     .map((s) => ({
       ...s,
       points: [...s.points].sort((a, b) => a.intensity - b.intensity),
     }));
-
-  if (drawable.length === 0) return null;
 
   const w = 320;
   const h = 180;
@@ -67,153 +56,93 @@ export function HistoryChart({
   const xTicks = [0, 0.5, 1].map((t) => minX + t * (maxX - minX));
 
   return (
-    <div className="w-full max-w-xl">
-      <div className="rounded-lg border border-border bg-muted/40 p-2">
-        <svg
-          viewBox={`0 0 ${w} ${h}`}
-          className="h-auto w-full"
-          role="img"
-          aria-label={
-            all.length
-              ? `Lactate curves across ${lines.length} ${
-                  lines.length === 1 ? "test" : "tests"
-                }`
-              : "All tests hidden"
-          }
-        >
-          {lines.map((s) => (
-            <g key={s.id}>
-              <path
-                d={s.points
-                  .map(
-                    (p, i) =>
-                      `${i === 0 ? "M" : "L"} ${x(p.intensity)} ${y(p.lactate)}`,
-                  )
-                  .join(" ")}
-                fill="none"
+    <div className="w-full max-w-xl rounded-lg border border-border bg-muted/40 p-2">
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        className="h-auto w-full"
+        role="img"
+        aria-label={
+          all.length
+            ? `Lactate curves across ${lines.length} ${
+                lines.length === 1 ? "test" : "tests"
+              }`
+            : "All tests hidden"
+        }
+      >
+        {lines.map((s) => (
+          <g key={s.id}>
+            <path
+              d={s.points
+                .map(
+                  (p, i) =>
+                    `${i === 0 ? "M" : "L"} ${x(p.intensity)} ${y(p.lactate)}`,
+                )
+                .join(" ")}
+              fill="none"
+              stroke={s.color}
+              strokeWidth="2.5"
+              strokeDasharray={s.dash || undefined}
+              strokeLinejoin="round"
+              // A round cap grows every dash by strokeWidth/2 at each end,
+              // which would close the 4-unit gaps to 1.5 and make the patterns
+              // read as solid.
+              strokeLinecap={s.dash ? "butt" : "round"}
+            />
+            {s.points.map((p, i) => (
+              <circle
+                key={i}
+                cx={x(p.intensity)}
+                cy={y(p.lactate)}
+                r="3"
+                fill="var(--card)"
                 stroke={s.color}
-                strokeWidth="2.5"
-                strokeDasharray={s.dash || undefined}
-                strokeLinejoin="round"
-                // A round cap grows every dash by strokeWidth/2 at each end,
-                // which would close the 4-unit gaps to 1.5 and make the
-                // patterns read as solid.
-                strokeLinecap={s.dash ? "butt" : "round"}
+                strokeWidth="2"
               />
-              {s.points.map((p, i) => (
-                <circle
-                  key={i}
-                  cx={x(p.intensity)}
-                  cy={y(p.lactate)}
-                  r="3"
-                  fill="var(--card)"
-                  stroke={s.color}
-                  strokeWidth="2"
-                />
-              ))}
-            </g>
-          ))}
+            ))}
+          </g>
+        ))}
 
-          {/* x-axis labels, in the sport's unit */}
-          {all.length
-            ? xTicks.map((t, i) => (
-                <text
-                  key={i}
-                  x={x(t)}
-                  y={h - 8}
-                  textAnchor={
-                    i === 0
-                      ? "start"
-                      : i === xTicks.length - 1
-                        ? "end"
-                        : "middle"
-                  }
-                  fontSize="9"
-                  fill="var(--muted-foreground)"
-                >
-                  {formatIntensity(sport, t)}
-                  {i === xTicks.length - 1 ? SPORTS[sport].unit : ""}
-                </text>
-              ))
-            : null}
-
-          {/* y-axis: max lactate label */}
-          {all.length ? (
-            <text
-              x={4}
-              y={y(maxY) + 8}
-              fontSize="9"
-              fill="var(--muted-foreground)"
-            >
-              {formatLactate(maxY)}
-            </text>
-          ) : (
-            <text
-              x={w / 2}
-              y={h / 2}
-              textAnchor="middle"
-              fontSize="10"
-              fill="var(--muted-foreground)"
-            >
-              All tests hidden
-            </text>
-          )}
-        </svg>
-      </div>
-
-      {/* Chips read as a legend unless they say they are tappable — a coach
-          looked straight at them and did not see a control. */}
-      <p className="mt-2 px-0.5 text-[11px] text-muted-foreground">
-        Tap a test to show or hide its curve
-      </p>
-
-      <ul className="mt-1.5 flex flex-wrap gap-2 px-0.5">
-        {drawable.map((s) => {
-          const on = !hidden[s.id];
-          return (
-            <li key={s.id}>
-              <button
-                type="button"
-                aria-pressed={on}
-                aria-label={`${on ? "Hide" : "Show"} test on ${s.label}`}
-                onClick={() =>
-                  setHidden((prev) => ({ ...prev, [s.id]: !prev[s.id] }))
+        {/* x-axis labels, in the sport's unit */}
+        {all.length
+          ? xTicks.map((t, i) => (
+              <text
+                key={i}
+                x={x(t)}
+                y={h - 8}
+                textAnchor={
+                  i === 0 ? "start" : i === xTicks.length - 1 ? "end" : "middle"
                 }
-                className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 transition-colors ${
-                  on
-                    ? "border-foreground/25 bg-card"
-                    : "border-dashed border-border bg-transparent"
-                }`}
+                fontSize="9"
+                fill="var(--muted-foreground)"
               >
-                <span
-                  aria-hidden
-                  className={`flex h-4 w-4 items-center justify-center rounded-full ${
-                    on ? "text-white" : "text-muted-foreground"
-                  }`}
-                  style={on ? { backgroundColor: s.color } : undefined}
-                >
-                  {on ? <Check size={11} strokeWidth={3.5} /> : <Plus size={11} strokeWidth={3} />}
-                </span>
-                <svg aria-hidden width="18" height="4" viewBox="0 0 18 4">
-                  <line
-                    x1="0"
-                    y1="2"
-                    x2="18"
-                    y2="2"
-                    stroke={on ? s.color : "var(--muted-foreground)"}
-                    strokeWidth="2.5"
-                    strokeDasharray={s.dash || undefined}
-                    strokeLinecap={s.dash ? "butt" : "round"}
-                  />
-                </svg>
-                <span className="font-mono text-[11px] text-muted-foreground">
-                  {s.label}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+                {formatIntensity(sport, t)}
+                {i === xTicks.length - 1 ? SPORTS[sport].unit : ""}
+              </text>
+            ))
+          : null}
+
+        {/* y-axis: max lactate label */}
+        {all.length ? (
+          <text
+            x={4}
+            y={y(maxY) + 8}
+            fontSize="9"
+            fill="var(--muted-foreground)"
+          >
+            {formatLactate(maxY)}
+          </text>
+        ) : (
+          <text
+            x={w / 2}
+            y={h / 2}
+            textAnchor="middle"
+            fontSize="10"
+            fill="var(--muted-foreground)"
+          >
+            All tests hidden
+          </text>
+        )}
+      </svg>
     </div>
   );
 }
