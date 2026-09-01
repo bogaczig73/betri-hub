@@ -84,6 +84,16 @@ export async function getTestDetail(testId: string) {
  * one test = one line.
  */
 export async function getMemberHistory(memberId: string) {
+  // memberId comes straight off the URL; a non-uuid makes Postgres raise
+  // 22P02, and there is no error boundary, so it would 500 instead of 404.
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      memberId,
+    )
+  ) {
+    return null;
+  }
+
   const member = await db.query.members.findFirst({
     where: eq(members.id, memberId),
   });

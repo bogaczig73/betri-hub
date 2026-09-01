@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 import { formatLactate } from "@/lib/format";
 import { SPORTS, formatIntensity, type Sport } from "@/lib/lactate/sport";
 
@@ -5,15 +9,20 @@ export interface HistorySeries {
   id: string;
   label: string;
   color: string;
+  /** SVG dash pattern — series stay distinguishable without colour vision. */
+  dash: string;
   /** Ascending engine intensity (speed for run, watts for bike). */
   points: { intensity: number; lactate: number }[];
 }
 
+// ponytail: geometry deliberately mirrors AnalysisChart so the two read as the
+// same chart. Fold into one <Chart series=[]> if a third one lands.
 /**
  * One athlete's lactate curves stacked on a single pair of axes — one line per
  * test, so a shift left/right over time is the whole point of the picture.
  * X is the engine's ascending intensity, labelled in the sport's own unit;
- * Y is lactate. Renders nothing until some series has two usable points.
+ * Y is lactate. Tap a legend entry to drop that test out of the picture; the
+ * axes rescale to whatever is left.
  */
 export function HistoryChart({
   series,
@@ -22,138 +31,163 @@ export function HistoryChart({
   series: HistorySeries[];
   sport: Sport;
 }) {
-  const lines = series
+  const [hidden, setHidden] = useState<Record<string, boolean>>({});
+
+  const drawable = series.filter((s) => s.points.length >= 2);
+  const lines = drawable
+    .filter((s) => !hidden[s.id])
     .map((s) => ({
       ...s,
       points: [...s.points].sort((a, b) => a.intensity - b.intensity),
-    }))
-    .filter((s) => s.points.length >= 2);
+    }));
 
-  if (lines.length === 0) return null;
+  if (drawable.length === 0) return null;
 
   const w = 320;
-  const h = 200;
-  const padL = 30;
+  const h = 180;
+  const padL = 28;
   const padR = 12;
-  const padTop = 12;
-  const padBottom = 26;
+  const padTop = 16;
+  const padBottom = 30;
 
   const all = lines.flatMap((s) => s.points);
-  const minX = Math.min(...all.map((p) => p.intensity));
-  const maxX = Math.max(...all.map((p) => p.intensity));
-  const maxY = Math.max(...all.map((p) => p.lactate)) * 1.12 || 1;
+  const minX = all.length ? Math.min(...all.map((p) => p.intensity)) : 0;
+  const maxX = all.length ? Math.max(...all.map((p) => p.intensity)) : 1;
+  const maxY = all.length
+    ? Math.max(...all.map((p) => p.lactate)) * 1.12 || 1
+    : 1;
 
   const x = (v: number) =>
     padL + ((v - minX) / (maxX - minX || 1)) * (w - padL - padR);
   const y = (v: number) => padTop + (1 - v / maxY) * (h - padTop - padBottom);
 
   const xTicks = [0, 0.5, 1].map((t) => minX + t * (maxX - minX));
-  const yTicks = [0, maxY / 2, maxY];
 
   return (
-    // Capped width: the SVG scales its 9px labels with it, so a full-width
-    // desktop card turns the axis into billboard type.
-    <div className="w-full max-w-xl rounded-[20px] border border-border bg-card p-3">
-      <svg
-        viewBox={`0 0 ${w} ${h}`}
-        className="h-auto w-full"
-        role="img"
-        aria-label={`Lactate curves across ${lines.length} ${
-          lines.length === 1 ? "test" : "tests"
-        }`}
-      >
-        {yTicks.map((t, i) => (
-          <g key={`y${i}`}>
-            <line
-              x1={padL}
-              y1={y(t)}
-              x2={w - padR}
-              y2={y(t)}
-              stroke="var(--border)"
-              strokeWidth="1"
-            />
+    <div className="w-full max-w-xl">
+      <div className="rounded-lg border border-border bg-muted/40 p-2">
+        <svg
+          viewBox={`0 0 ${w} ${h}`}
+          className="h-auto w-full"
+          role="img"
+          aria-label={`Lactate curves across ${lines.length} ${
+            lines.length === 1 ? "test" : "tests"
+          }`}
+        >
+          {lines.map((s) => (
+            <g key={s.id}>
+              <path
+                d={s.points
+                  .map(
+                    (p, i) =>
+                      `${i === 0 ? "M" : "L"} ${x(p.intensity)} ${y(p.lactate)}`,
+                  )
+                  .join(" ")}
+                fill="none"
+                stroke={s.color}
+                strokeWidth="2.5"
+                strokeDasharray={s.dash || undefined}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+              {s.points.map((p, i) => (
+                <circle
+                  key={i}
+                  cx={x(p.intensity)}
+                  cy={y(p.lactate)}
+                  r="3"
+                  fill="var(--card)"
+                  stroke={s.color}
+                  strokeWidth="2"
+                />
+              ))}
+            </g>
+          ))}
+
+          {/* x-axis labels, in the sport's unit */}
+          {all.length
+            ? xTicks.map((t, i) => (
+                <text
+                  key={i}
+                  x={x(t)}
+                  y={h - 8}
+                  textAnchor={
+                    i === 0
+                      ? "start"
+                      : i === xTicks.length - 1
+                        ? "end"
+                        : "middle"
+                  }
+                  fontSize="9"
+                  fill="var(--muted-foreground)"
+                >
+                  {formatIntensity(sport, t)}
+                  {i === xTicks.length - 1 ? SPORTS[sport].unit : ""}
+                </text>
+              ))
+            : null}
+
+          {/* y-axis: max lactate label */}
+          {all.length ? (
             <text
-              x={padL - 4}
-              y={y(t) + 3}
-              textAnchor="end"
+              x={4}
+              y={y(maxY) + 8}
               fontSize="9"
               fill="var(--muted-foreground)"
             >
-              {formatLactate(t)}
+              {formatLactate(maxY)}
             </text>
-          </g>
-        ))}
+          ) : (
+            <text
+              x={w / 2}
+              y={h / 2}
+              textAnchor="middle"
+              fontSize="10"
+              fill="var(--muted-foreground)"
+            >
+              All tests hidden
+            </text>
+          )}
+        </svg>
+      </div>
 
-        {lines.map((s) => (
-          <g key={s.id}>
-            <path
-              d={s.points
-                .map(
-                  (p, i) =>
-                    `${i === 0 ? "M" : "L"} ${x(p.intensity)} ${y(p.lactate)}`,
-                )
-                .join(" ")}
-              fill="none"
-              stroke={s.color}
-              strokeWidth="2.5"
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
-            {s.points.map((p, i) => (
-              <circle
-                key={i}
-                cx={x(p.intensity)}
-                cy={y(p.lactate)}
-                r="3"
-                fill="var(--card)"
-                stroke={s.color}
-                strokeWidth="2"
-              />
-            ))}
-          </g>
-        ))}
-
-        {xTicks.map((t, i) => (
-          <text
-            key={`x${i}`}
-            x={x(t)}
-            y={h - 8}
-            textAnchor={
-              i === 0 ? "start" : i === xTicks.length - 1 ? "end" : "middle"
-            }
-            fontSize="9"
-            fill="var(--muted-foreground)"
-          >
-            {formatIntensity(sport, t)}
-            {i === xTicks.length - 1 ? SPORTS[sport].unit : ""}
-          </text>
-        ))}
-      </svg>
-
-      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 px-1">
-        {lines.map((s) => (
-          <li key={s.id} className="flex items-center gap-1.5">
-            <span
-              aria-hidden
-              className="h-0.5 w-4 rounded-full"
-              style={{ backgroundColor: s.color }}
-            />
-            <span className="font-mono text-[11px] text-muted-foreground">
-              {s.label}
-            </span>
-          </li>
-        ))}
+      <ul className="mt-2 flex flex-wrap gap-2 px-0.5">
+        {drawable.map((s) => {
+          const on = !hidden[s.id];
+          return (
+            <li key={s.id}>
+              <button
+                type="button"
+                aria-pressed={on}
+                onClick={() =>
+                  setHidden((prev) => ({ ...prev, [s.id]: !prev[s.id] }))
+                }
+                className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-colors ${
+                  on
+                    ? "border-border bg-card"
+                    : "border-dashed border-border bg-transparent opacity-50"
+                }`}
+              >
+                <svg aria-hidden width="18" height="4" viewBox="0 0 18 4">
+                  <line
+                    x1="0"
+                    y1="2"
+                    x2="18"
+                    y2="2"
+                    stroke={on ? s.color : "var(--muted-foreground)"}
+                    strokeWidth="2.5"
+                    strokeDasharray={s.dash || undefined}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span className="font-mono text-[11px] text-muted-foreground">
+                  {s.label}
+                </span>
+              </button>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
 }
-
-/** Line colours, cycled newest-test-first. Drawn from the hub palette. */
-export const SERIES_COLORS = [
-  "#f13a2c", // primary red — newest test
-  "#4c98b9",
-  "#03904a",
-  "#8b5cf6",
-  "#e07b39",
-  "#0f9b9b",
-];
