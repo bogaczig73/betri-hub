@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { formatLactate } from "@/lib/format";
@@ -160,7 +161,13 @@ export function HistoryChart({
         </svg>
       </div>
 
-      <ul className="mt-2 flex flex-wrap gap-2 px-0.5">
+      {/* Chips read as a legend unless they say they are tappable — a coach
+          looked straight at them and did not see a control. */}
+      <p className="mt-2 px-0.5 text-[11px] text-muted-foreground">
+        Tap a test to show or hide its curve
+      </p>
+
+      <ul className="mt-1.5 flex flex-wrap gap-2 px-0.5">
         {drawable.map((s) => {
           const on = !hidden[s.id];
           return (
@@ -172,12 +179,21 @@ export function HistoryChart({
                 onClick={() =>
                   setHidden((prev) => ({ ...prev, [s.id]: !prev[s.id] }))
                 }
-                className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-colors ${
+                className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 transition-colors ${
                   on
-                    ? "border-border bg-card"
+                    ? "border-foreground/25 bg-card"
                     : "border-dashed border-border bg-transparent"
                 }`}
               >
+                <span
+                  aria-hidden
+                  className={`flex h-4 w-4 items-center justify-center rounded-full ${
+                    on ? "text-white" : "text-muted-foreground"
+                  }`}
+                  style={on ? { backgroundColor: s.color } : undefined}
+                >
+                  {on ? <Check size={11} strokeWidth={3.5} /> : <Plus size={11} strokeWidth={3} />}
+                </span>
                 <svg aria-hidden width="18" height="4" viewBox="0 0 18 4">
                   <line
                     x1="0"
