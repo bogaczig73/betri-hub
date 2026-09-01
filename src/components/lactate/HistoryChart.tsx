@@ -1,5 +1,5 @@
 import { formatLactate } from "@/lib/format";
-import { formatIntensity, type Sport } from "@/lib/lactate/sport";
+import { SPORTS, formatIntensity, type Sport } from "@/lib/lactate/sport";
 
 export interface HistorySeries {
   id: string;
@@ -51,7 +51,9 @@ export function HistoryChart({
   const yTicks = [0, maxY / 2, maxY];
 
   return (
-    <div className="rounded-[20px] border border-border bg-card p-3">
+    // Capped width: the SVG scales its 9px labels with it, so a full-width
+    // desktop card turns the axis into billboard type.
+    <div className="w-full max-w-xl rounded-[20px] border border-border bg-card p-3">
       <svg
         viewBox={`0 0 ${w} ${h}`}
         className="h-auto w-full"
@@ -123,6 +125,7 @@ export function HistoryChart({
             fill="var(--muted-foreground)"
           >
             {formatIntensity(sport, t)}
+            {i === xTicks.length - 1 ? SPORTS[sport].unit : ""}
           </text>
         ))}
       </svg>

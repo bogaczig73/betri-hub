@@ -49,7 +49,8 @@ export default async function MemberHistoryPage({
             </span>
             <h3 className="mt-5 font-display text-3xl">No tests yet</h3>
             <p className="mt-2 max-w-xs text-[15px] leading-relaxed text-muted-foreground">
-              {member.name} hasn&apos;t taken part in a lactate test yet.
+              {member.name}{" "}
+              hasn&apos;t taken part in a lactate test yet.
             </p>
           </div>
         ) : (
@@ -90,7 +91,8 @@ function SportHistory({
   }));
 
   return (
-    <section>
+    // Same cap as the chart card, so the list lines up under it.
+    <section className="w-full max-w-xl">
       <div className="flex items-center gap-3 pb-3">
         <span className="eyebrow text-[11px] text-muted-foreground">
           {SPORTS[sport].label} history
