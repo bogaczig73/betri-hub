@@ -15,8 +15,10 @@ export interface HistorySeries {
   points: { intensity: number; lactate: number }[];
 }
 
-// ponytail: geometry deliberately mirrors AnalysisChart so the two read as the
-// same chart. Fold into one <Chart series=[]> if a third one lands.
+// ponytail: three charts now duplicate this geometry — AnalysisChart,
+// LactateChart and this one. Deliberate: folding them into one
+// <Chart series=[]> is a bigger diff into working code than any of them is
+// worth today. Fold when one of the three next needs a real change.
 /**
  * One athlete's lactate curves stacked on a single pair of axes — one line per
  * test, so a shift left/right over time is the whole point of the picture.
@@ -70,9 +72,13 @@ export function HistoryChart({
           viewBox={`0 0 ${w} ${h}`}
           className="h-auto w-full"
           role="img"
-          aria-label={`Lactate curves across ${lines.length} ${
-            lines.length === 1 ? "test" : "tests"
-          }`}
+          aria-label={
+            all.length
+              ? `Lactate curves across ${lines.length} ${
+                  lines.length === 1 ? "test" : "tests"
+                }`
+              : "All tests hidden"
+          }
         >
           {lines.map((s) => (
             <g key={s.id}>
@@ -88,7 +94,10 @@ export function HistoryChart({
                 strokeWidth="2.5"
                 strokeDasharray={s.dash || undefined}
                 strokeLinejoin="round"
-                strokeLinecap="round"
+                // A round cap grows every dash by strokeWidth/2 at each end,
+                // which would close the 4-unit gaps to 1.5 and make the
+                // patterns read as solid.
+                strokeLinecap={s.dash ? "butt" : "round"}
               />
               {s.points.map((p, i) => (
                 <circle
@@ -159,13 +168,14 @@ export function HistoryChart({
               <button
                 type="button"
                 aria-pressed={on}
+                aria-label={`${on ? "Hide" : "Show"} test on ${s.label}`}
                 onClick={() =>
                   setHidden((prev) => ({ ...prev, [s.id]: !prev[s.id] }))
                 }
                 className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-colors ${
                   on
                     ? "border-border bg-card"
-                    : "border-dashed border-border bg-transparent opacity-50"
+                    : "border-dashed border-border bg-transparent"
                 }`}
               >
                 <svg aria-hidden width="18" height="4" viewBox="0 0 18 4">
@@ -177,7 +187,7 @@ export function HistoryChart({
                     stroke={on ? s.color : "var(--muted-foreground)"}
                     strokeWidth="2.5"
                     strokeDasharray={s.dash || undefined}
-                    strokeLinecap="round"
+                    strokeLinecap={s.dash ? "butt" : "round"}
                   />
                 </svg>
                 <span className="font-mono text-[11px] text-muted-foreground">

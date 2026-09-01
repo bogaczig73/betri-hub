@@ -8,8 +8,8 @@ import {
   type HistorySeries,
 } from "@/components/lactate/HistoryChart";
 import { getMemberHistory, type MemberHistory } from "@/lib/db/queries";
-import { SERIES_COLORS, SERIES_DASHES } from "@/lib/lactate/series";
 import { formatDate, formatLactate } from "@/lib/format";
+import { SERIES_COLORS, SERIES_DASHES } from "@/lib/lactate/series";
 import { SPORTS, toSport, type Sport } from "@/lib/lactate/sport";
 
 export const dynamic = "force-dynamic";
