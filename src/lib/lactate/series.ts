@@ -1,6 +1,6 @@
 /**
- * Chart series styling, shared by the client chart and the server page that
- * lists the same tests.
+ * Chart series styling, shared by the client component that owns the chart's
+ * visibility state and the server page that builds the rows.
  *
  * This lives in its own plain module on purpose: every export of a
  * `"use client"` file becomes a client reference when a server component

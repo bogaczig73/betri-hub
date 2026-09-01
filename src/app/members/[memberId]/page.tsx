@@ -1,16 +1,13 @@
-import { ChevronRight, LineChart } from "lucide-react";
-import Link from "next/link";
+import { LineChart } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { TopBar } from "@/components/TopBar";
-import {
-  HistoryChart,
-  type HistorySeries,
-} from "@/components/lactate/HistoryChart";
 import { getMemberHistory, type MemberHistory } from "@/lib/db/queries";
-import { formatDate, formatLactate } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { SERIES_COLORS, SERIES_DASHES } from "@/lib/lactate/series";
 import { SPORTS, toSport, type Sport } from "@/lib/lactate/sport";
+
+import { SportHistory, type TestRow } from "./SportHistory";
 
 export const dynamic = "force-dynamic";
 
@@ -59,8 +56,9 @@ export default async function MemberHistoryPage({
               <SportHistory
                 key={sport}
                 sport={sport}
-                participations={participations.filter(
-                  (p) => toSport(p.test.sport) === sport,
+                rows={buildRows(
+                  sport,
+                  participations.filter((p) => toSport(p.test.sport) === sport),
                 )}
               />
             ))}
@@ -71,16 +69,15 @@ export default async function MemberHistoryPage({
   );
 }
 
-function SportHistory({
-  sport,
-  participations,
-}: {
-  sport: Sport;
-  participations: MemberHistory["participations"];
-}) {
-  // One pass per test, shared by the chart and the list below it, so the two
-  // can never disagree about what counts as a usable point.
-  const rows = participations.map((p, i) => {
+/**
+ * One pass per test, feeding both the chart and the list, so the two can never
+ * disagree about what counts as a usable point.
+ */
+function buildRows(
+  sport: Sport,
+  participations: MemberHistory["participations"],
+): TestRow[] {
+  return participations.map((p, i) => {
     const points = p.measurements
       .filter((m) => m.lactate != null && m.intensity != null)
       .map((m) => ({
@@ -88,80 +85,19 @@ function SportHistory({
         lactate: Number(m.lactate),
       }))
       // A zero pace divides to Infinity, and Postgres numeric legally holds
-      // NaN. Either one poisons the min/max the whole chart is scaled from
-      // and blanks every curve, not just its own — drop them here.
-      .filter(
-        (q) => Number.isFinite(q.intensity) && Number.isFinite(q.lactate),
-      );
+      // NaN. Either one poisons the min/max the whole chart is scaled from and
+      // blanks every curve, not just its own — drop them here.
+      .filter((q) => Number.isFinite(q.intensity) && Number.isFinite(q.lactate));
 
     return {
-      test: p.test,
       testId: p.testId,
+      title: p.test.title,
+      date: formatDate(p.test.testDate),
       color: SERIES_COLORS[i % SERIES_COLORS.length],
       dash: SERIES_DASHES[i % SERIES_DASHES.length],
       points,
-      // A single point draws no line, so say so rather than leave the coach
-      // hunting for a missing curve.
       charted: points.length >= 2,
-      peak: points.length
-        ? Math.max(...points.map((q) => q.lactate))
-        : null,
+      peak: points.length ? Math.max(...points.map((q) => q.lactate)) : null,
     };
   });
-
-  const series: HistorySeries[] = rows.map((r) => ({
-    id: r.testId,
-    label: formatDate(r.test.testDate),
-    color: r.color,
-    dash: r.dash,
-    points: r.points,
-  }));
-
-  return (
-    // Same cap as the chart card, so the list lines up under it.
-    <section className="w-full max-w-xl">
-      <div className="flex items-center gap-3 pb-3">
-        <span className="eyebrow text-[11px] text-muted-foreground">
-          {SPORTS[sport].label} history
-        </span>
-        <span className="h-px flex-1 bg-border" />
-      </div>
-
-      <HistoryChart series={series} sport={sport} />
-
-      <ul className="mt-3 flex flex-col divide-y divide-border overflow-hidden rounded-[20px] border border-border bg-card">
-        {rows.map((r) => (
-          <li key={r.testId}>
-            <Link
-              href={`/lactate/${r.testId}`}
-              className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
-            >
-              <span
-                aria-hidden
-                className="h-8 w-1 shrink-0 rounded-full"
-                style={{
-                  backgroundColor: r.charted ? r.color : "var(--border)",
-                }}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium leading-tight transition-colors group-hover:text-link-hover">
-                  {r.test.title}
-                </p>
-                <p className="text-[13px] text-muted-foreground">
-                  {formatDate(r.test.testDate)} ·{" "}
-                  {r.charted
-                    ? `${r.points.length} points · peak ${formatLactate(r.peak)}`
-                    : "no curve"}
-                </p>
-              </div>
-              <ChevronRight
-                size={18}
-                className="shrink-0 text-muted-foreground"
-              />
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
 }
