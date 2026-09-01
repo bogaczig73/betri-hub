@@ -1,4 +1,5 @@
-import { Users } from "lucide-react";
+import { ChevronRight, Users } from "lucide-react";
+import Link from "next/link";
 
 import { TopBar } from "@/components/TopBar";
 import { Avatar } from "@/components/ui/Avatar";
@@ -33,15 +34,20 @@ export default async function MembersPage() {
         ) : (
           <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-[20px] border border-border bg-card">
             {members.map((m) => (
-              <li
-                key={m.id}
-                className="flex items-center gap-3 px-4 py-3"
-              >
-                <Avatar name={m.name} />
-                <span className="flex-1 font-medium">{m.name}</span>
-                <span className="font-mono text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  {m.testCount} {m.testCount === 1 ? "test" : "tests"}
-                </span>
+              <li key={m.id}>
+                <Link
+                  href={`/members/${m.id}`}
+                  className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
+                >
+                  <Avatar name={m.name} />
+                  <span className="flex-1 font-medium transition-colors group-hover:text-link-hover">
+                    {m.name}
+                  </span>
+                  <span className="font-mono text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {m.testCount} {m.testCount === 1 ? "test" : "tests"}
+                  </span>
+                  <ChevronRight size={18} className="text-muted-foreground" />
+                </Link>
               </li>
             ))}
           </ul>
