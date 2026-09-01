@@ -94,7 +94,10 @@ export function SportHistory({
               </label>
             ) : (
               // No curve to toggle — keep the row aligned with the others.
-              <span className="flex shrink-0 items-center gap-2 py-3 pl-4 pr-3" aria-hidden>
+              <span
+                className="flex shrink-0 items-center gap-2 py-3 pl-4 pr-3"
+                aria-hidden
+              >
                 <span className="block h-[18px] w-[18px]" />
                 <span className="block h-[4px] w-[18px]" />
               </span>
