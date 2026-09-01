@@ -12,7 +12,7 @@ export const SERIES_COLORS = [
   "#f13a2c", // the home tile's blood-drop red — newest test
   "#4c98b9",
   "#8b5cf6",
-  "#e07b39",
+  "#c96518", // darkened from #e07b39: white-on-fill was 2.97:1, under the 3:1 floor
   "#0f9b9b",
   "#03904a",
 ];
