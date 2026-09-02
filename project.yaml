@@ -1,9 +1,19 @@
 name: betri-hub
 path: ~/_fun/betri-hub
 deploy: review
-production_branch: release
-test_cmd: ""          # TODO: no test script yet; add when work starts
+
+# `main` IS production. Verified on the Vercel project 2026-09-02:
+# `betri-hub-git-main-*` domain, latest deployment `target: production`.
+# The old `production_branch: release` named a branch that has never existed in
+# this repo, locally or on origin — a push to `main` deploys the site.
+production_branch: main
+
+# `node --test` over the pure lactate maths and the keypad parsing.
+# No test framework and no new dependency: Node strips the TypeScript itself,
+# and test/resolve.mjs teaches its ESM resolver the tsconfig `@/` alias.
+test_cmd: "pnpm test"
 build_cmd: "pnpm build"
+
 models:
   S: sonnet
   M: { implement: sonnet, review: opus }
@@ -12,4 +22,21 @@ models:
   # costs more than the review does. Fable is 2x Opus per token; spend it here,
   # not on routine diffs.
   critical: { implement: sonnet, review: fable }
-critical_paths: [src/lib/db/, drizzle/]   # verified 2026-09-02; no auth/ or payments/ in this repo yet — see BACKLOG.md
+
+# Reviewed 2026-09-02. Rule applied: being wrong here costs more than the
+# review. There is no auth and no money in this repo (see D-002), so the cost is
+# either a bad number given to a real athlete, or a lost//corrupted result.
+critical_paths:
+  # The threshold maths. A wrong curve fit or a wrong root silently hands an
+  # athlete the wrong training zone; nothing downstream can detect it.
+  - src/lib/lactate/
+  # The only path by which a typed reading becomes a stored number — "542" must
+  # be 5:42 and "124" must be 1.24. A wrong slice writes a wrong test.
+  - src/lib/format.ts
+  # Every write to an athlete's test, participants, baseline and measurements.
+  - src/app/lactate/actions.ts
+  # The shared member directory. `findOrCreateMember` matches case-insensitively
+  # on name; getting it wrong merges two athletes' histories into one row.
+  - src/app/members/actions.ts
+  - src/lib/db/
+  - drizzle/
