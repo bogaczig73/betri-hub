@@ -1,0 +1,15 @@
+name: betri-hub
+path: ~/_fun/betri-hub
+deploy: review
+production_branch: release
+test_cmd: ""          # TODO: no test script yet; add when work starts
+build_cmd: "pnpm build"
+models:
+  S: sonnet
+  M: { implement: sonnet, review: opus }
+  L: { orchestrate: fable, implement: sonnet, review: opus }
+  # Any task touching critical_paths, whatever its size — being wrong there
+  # costs more than the review does. Fable is 2x Opus per token; spend it here,
+  # not on routine diffs.
+  critical: { implement: sonnet, review: fable }
+critical_paths: [src/lib/db/, drizzle/]   # verified 2026-09-02; no auth/ or payments/ in this repo yet — see BACKLOG.md
