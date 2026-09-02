@@ -50,3 +50,29 @@ Not ranked. Radim pulls them into the list above if and when he wants them.
       `AnalysisSheet.tsx`, `MeasurementSheet.tsx` and `Sheet.tsx` (×2). Fixing
       them changes render behaviour of the sheets, so it is not a rubber-stamp
       cleanup. Until it is green, lint cannot join the merge gate.
+- [ ] Read the companion app's user roster in betri-hub (M/L, blocked on a
+      decision — Radim, 2026-09-02: "keep it separate for now but i want to see
+      user database from companion in betrihub"). Both apps stay separate
+      products; not everyone will use companion. This is about one roster, not a
+      merge.
+
+      **The blocker is not technical.** Neither app has authentication —
+      betri-hub's absence is decided (D-002) on the grounds that `/lactate`
+      already publishes every participant, which is true of *hub's own* data and
+      stops being true the moment it serves companion's roster. Decide whether
+      companion's user list may be public before building anything.
+
+      They are separate Neon projects (`curly-bar-47005847` and
+      `ancient-credit-89447271`), so there is no cross-database query without an
+      FDW. **Do not point hub at companion's tables**: companion has 15
+      migrations over 20 tables and is still moving, and shared tables mean it
+      cannot migrate without breaking hub. Expose the roster deliberately instead
+      — a read-only view (id, display name, sport, active; nothing more) with a
+      read-only role, or a small endpoint. The view is less code, the endpoint is
+      easier to put auth in front of later.
+
+      **Identity must come from companion, never from a name.** `findOrCreateMember`
+      matches case-insensitively on name — fine while hub only knows its own
+      people, an identity-merge bug the moment two sources meet: "Jan Novák" and
+      "jan novak" become one athlete and two lactate histories collapse into one
+      row. It is in `critical_paths` for this reason.
