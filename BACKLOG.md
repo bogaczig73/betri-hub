@@ -27,3 +27,26 @@ Radim owns the order. Unchecked `- [ ]` items feed `/plan-session`.
       (points and gridlines scale together); the real fix is per-label collision
       avoidance, judged not worth writing for a 320x180 preview. Revisit only if
       a coach actually reports it.
+
+## Candidates — appended by an agent 2026-09-02, unordered
+
+Not ranked. Radim pulls them into the list above if and when he wants them.
+
+- [ ] Duplicate intensity crashes the analysis view (S–M, **real bug**) —
+      `analyze()` throws `LactateInputError` on two stages at the same intensity.
+      That is right for the engine, but `analyzeTest()` is called in a `useMemo`
+      inside `LactateAnalysisView` with no try/catch and no error boundary, so
+      recording the same pace or the same watts twice takes down the whole
+      analysis screen. Reproduced 2026-09-02; pinned by the test named
+      `KNOWN GAP:` in `test/lactate.test.ts`. Needs a product call first: reject
+      the duplicate at input, merge the two readings, or catch and warn.
+- [ ] Decide whether heart rate should be interpolated or fitted (S, product) —
+      the engine reads HR linearly between raw stages. The `lactater` reference's
+      published HR column runs ~4-5 bpm lower at the same intensity (OBLA 2.0:
+      ours 158, theirs 153) and its method is undocumented. HR is what an athlete
+      actually trains to, so it is worth deciding rather than inheriting. See
+      STATUS.md.
+- [ ] `pnpm lint` is red on `main` (S) — 4 × `react-hooks/set-state-in-effect` in
+      `AnalysisSheet.tsx`, `MeasurementSheet.tsx` and `Sheet.tsx` (×2). Fixing
+      them changes render behaviour of the sheets, so it is not a rubber-stamp
+      cleanup. Until it is green, lint cannot join the merge gate.
